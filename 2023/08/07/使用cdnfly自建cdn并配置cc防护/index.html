@@ -1,0 +1,653 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>
+                    (() => {
+                        const sw = navigator.serviceWorker
+                        const error = () => console.error('Service Worker 注册失败！可能是由于您的浏览器不支持该功能！')
+                        if (!sw?.register('/sw.js')
+                            
+                            ?.catch(error)
+                            ) error()
+                    })()
+                </script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"><title>使用cdnfly自建CDN并配置CC防护 | 文一刀</title><meta name="keywords" content="文一刀"><meta name="author" content="First"><meta name="copyright" content="First"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#f7f9fe"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-touch-fullscreen" content="yes"><meta name="apple-mobile-web-app-title" content="使用cdnfly自建CDN并配置CC防护"><meta name="application-name" content="使用cdnfly自建CDN并配置CC防护"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="#f7f9fe"><meta property="og:type" content="article"><meta property="og:title" content="使用cdnfly自建CDN并配置CC防护"><meta property="og:url" content="http://example.com/2023/08/07/%E4%BD%BF%E7%94%A8cdnfly%E8%87%AA%E5%BB%BAcdn%E5%B9%B6%E9%85%8D%E7%BD%AEcc%E9%98%B2%E6%8A%A4/index.html"><meta property="og:site_name" content="文一刀"><meta property="og:description" content="更新： 2023.3.30 修正了第三节”自建云端的错误”，伪装授权站需要一直存在2023.4.02 修复了国内机器无法连接github的问题，即增加了国内机器可访问的安装脚本2023.4.14 新增了cdnfly设置回源host实现反代的介绍2023.4.24 修复了伪装站点监控失效的情况，更新了"><meta property="og:locale" content="zh-CN"><meta property="og:image" content="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACA3VmuEYalzG0lSVQIzLBJ4Lba_MZJAACPxIAAg4EwFVYWETVPO9D1DUE"><meta property="article:author" content="First"><meta property="article:tag" content="文一刀"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACA3VmuEYalzG0lSVQIzLBJ4Lba_MZJAACPxIAAg4EwFVYWETVPO9D1DUE"><meta name="description" content="更新： 2023.3.30 修正了第三节”自建云端的错误”，伪装授权站需要一直存在2023.4.02 修复了国内机器无法连接github的问题，即增加了国内机器可访问的安装脚本2023.4.14 新增了cdnfly设置回源host实现反代的介绍2023.4.24 修复了伪装站点监控失效的情况，更新了"><link rel="shortcut icon" href="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAxFmsZ_uZ3zpc9D-aK2g0ojIPoW0QAACcw8AAiRFkFW9bDbDDTZNCDUE"><link rel="canonical" href="http://example.com/2023/08/07/%E4%BD%BF%E7%94%A8cdnfly%E8%87%AA%E5%BB%BAcdn%E5%B9%B6%E9%85%8D%E7%BD%AEcc%E9%98%B2%E6%8A%A4/"><link rel="preconnect" href="//cdn.cbd.int"/><link rel="preconnect" href="//www.google-analytics.com" crossorigin=""/><meta name="google-site-verification" content="xxx"/><meta name="baidu-site-verification" content="code-xxx"/><meta name="msvalidate.01" content="xxx"/><link rel="manifest" href="/manifest.json"/><meta name="msapplication-TileColor" content="var(--anzhiyu-main)"/><link rel="mask-icon" href="/img/siteicon/apple-icon-180.png" color="#5bbad5"/><link rel="apple-touch-icon" sizes="180x180" href="/img/siteicon/apple-icon-180.png"/><link rel="apple-touch-icon-precomposed" sizes="180x180" href="/img/siteicon/apple-icon-180.png"/><link rel="icon" type="image/png" sizes="32x32" href="/img/siteicon/32.png"/><link rel="icon" type="image/png" sizes="16x16" href="/img/siteicon/16.png"/><link rel="bookmark" href="/img/siteicon/apple-icon-180.png"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-2048-2732.jpg" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-2732-2048.jpg" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-1668-2388.jpg" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-2388-1668.jpg" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-1536-2048.jpg" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-2048-1536.jpg" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-1668-2224.jpg" media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-2224-1668.jpg" media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-1620-2160.jpg" media="(device-width: 810px) and (device-height: 1080px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-2160-1620.jpg" media="(device-width: 810px) and (device-height: 1080px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-1290-2796.jpg" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-2796-1290.jpg" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-1179-2556.jpg" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-2556-1179.jpg" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-1284-2778.jpg" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-2778-1284.jpg" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-1170-2532.jpg" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-2532-1170.jpg" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-1125-2436.jpg" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-2436-1125.jpg" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-1242-2688.jpg" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-2688-1242.jpg" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-828-1792.jpg" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-1792-828.jpg" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-1242-2208.jpg" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-2208-1242.jpg" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-750-1334.jpg" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-1334-750.jpg" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-640-1136.jpg" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"/><link rel="apple-touch-startup-image" href="/img/siteicon/apple-splash-1136-640.jpg" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.cbd.int/node-snackbar@0.1.16/dist/snackbar.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.cbd.int/@fancyapps/ui@5.0.28/dist/fancybox/fancybox.css" media="print" onload="this.media='all'"><script async="async" src="https://www.googletagmanager.com/gtag/js?id=G-1N45T8T0T3"></script><script>window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-1N45T8T0T3');
+</script><script>const GLOBAL_CONFIG = {
+  linkPageTop: undefined,
+  peoplecanvas: undefined,
+  postHeadAiDescription: undefined,
+  diytitle: undefined,
+  LA51: undefined,
+  greetingBox: undefined,
+  twikooEnvId: '',
+  commentBarrageConfig:undefined,
+  root: '/',
+  preloader: {"source":1},
+  friends_vue_info: {"apiurl":"https://friends.anheyu.com/"},
+  navMusic: true,
+  mainTone: {"mode":"api","api":"https://img2color-go.vercel.app/api?img=","cover_change":true},
+  authorStatus: {"skills":["🤖️ 数码科技爱好者","🔍 分享与热心帮助","🏠 智能家居小能手","🔨 设计开发一条龙","🤝 专修交互与设计","🏃 脚踏实地行动派","🧱 团队小组发动机","💢 壮汉人狠话不多"]},
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"languages":{"hits_empty":"找不到您查询的内容：${query}"}},
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"简","rightMenuMsgToTraditionalChinese":"转为繁体","rightMenuMsgToSimplifiedChinese":"转为简体"},
+  noticeOutdate: {"limitDay":365,"position":"top","messagePrev":"It has been","messageNext":"days since the last update, the content of the article may be outdated."},
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":330},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    simplehomepage: false,
+    post: false
+  },
+  runtime: '天',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: {"copy":true,"copyrightEbable":true,"limitCount":50,"languages":{"author":"作者: First","link":"链接: ","source":"来源: 文一刀","info":"著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。","copySuccess":"复制成功，复制和转载请标注本文地址"}},
+  lightbox: 'fancybox',
+  Snackbar: {"chs_to_cht":"你已切换为繁体","cht_to_chs":"你已切换为简体","day_to_night":"你已切换为深色模式","night_to_day":"你已切换为浅色模式","bgLight":"#425AEF","bgDark":"#1f1f1f","position":"top-center"},
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.cbd.int/flickr-justified-gallery@2.1.2/dist/fjGallery.min.js',
+      css: 'https://cdn.cbd.int/flickr-justified-gallery@2.1.2/dist/fjGallery.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: true,
+  isAnchor: false,
+  shortcutKey: undefined,
+  autoDarkmode: true
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  configTitle: '文一刀',
+  title: '使用cdnfly自建CDN并配置CC防护',
+  postAI: '',
+  pageFillDescription: '一、前言, 二、准备, 三、cdnfly自建云端, 四、主控服务器设置, 1、首先更新centos7源, 2、修改主控vps的hosts文件, 3、检查hosts是否生效, 4、安装cdnfly控制面板, 五、CDN节点服务器配置, 1、更新centos7的源, 2、添加SWAP虚拟内存, 3、安装被控服务, 4、安装BBR, 5、卸载节点, 六、cdnfly控制台必要配置, 1、添加CDN节点, 2、DNS设置, 3、线路分组 设置分线路解析, 4、添加套餐, 5、添加网站, 6、节点监控介绍, 7、单节点设置, 8、禁用API(多用户必设置)(重要重要重要！！！), 七、cdnfly控制台推荐配置, 1、设置CC防护, 2、设置CDN缓存文件类型, 3、设置CDN节点服务器缓存大小和最大带宽, 4、申请证书, 八、cdnfly控制台其他配置, 1、短信x2F邮箱提示, 2、对接支付, 3、转发, 4、面板通过域名访问, 5、节点监控和宕机自动切换, 6、cdnfly设置反代, 九、备份和恢复, 1、备份, 2、恢复, 十、杂谈更新修正了第三节自建云端的错误伪装授权站需要一直存在修复了国内机器无法连接的问题即增加了国内机器可访问的安装脚本新增了设置回源实现反代的介绍修复了伪装站点监控失效的情况更新了的节点监控功能说明存在重大漏洞普通用户生成的通过某些方法可以拿到管理员权限删除了国内机器安装脚本请自行挂代理新增备份和恢复记录更新主控节点安装命令一前言本文记录一下使用自建防攻击软件系统搭建系统保姆级教程适合小白食用个人感觉自建和反代网站效果都差不多都可以实现加速缓存防攻击等功能但我暂时还不是很懂相关配置相较而言自建更容易批量维护和管理各节点官方安装文档安装说明使用文档二准备主控和被控均不能在已安装的情况下执行安装命令必须确保端口未被占用系统必须为或等系统都不支持主控需开放端口节点需要开放端口一台最小内存的服务器做主控面板控制台若干服务器做节点系统主控和被控节点暂时仅支持和系统本文以一台系统的内存做主控一台任何系统的搭建伪装授权站点即自建云端一台系统的纽约内存做节点接管中国大陆移动以及海外等其他流量一台系统的新加坡内存做节点接管中国大陆的电信和联通流量为什么用主要是我就知道这一家有小内存虽然这款比一些内存的都贵但为了测试内存可用还是选择了为什么节点机器用内存小鸡大部分廉价的国内优化机器只有内存三自建云端有官方授权的可跳过这一步需要购买正版授权请前往官网购买因为我就是临时个人测试使用官方那个有些贵就采用大佬分享的的绕过授权方法盗版可耻开发不易有条件请用正版自建云端搭建方法用这个源码搭建一个站点绑定域名并根据文件中的伪静态配置设置伪静态建议自己搭建不过也可以用我的但是我的站点哪一天没了你的机器会提示授权过期到时候还是需要你自己搭建我用宝塔搭建大概为这样我的只能使用监控监控都无法正常工作可能和宝塔有关四主控服务器设置主控需要开放端口并且主控和节点机不能安装在同一机器上会导致端口冲突主控若未开启端口会导致程序大量占用直至死机如有任何问题建议重置首先更新源修改主控的文件修改主控的文件将这个域名指向刚才的自建云端服务器修改意义是主控请求这两个网站的内容会直接去这个服务器请求这样就绕过了官方服务器的验证添加以下内容记得替换为你自己搭建的你就用这个也行更新云端此可以监控检查是否生效如果都返回说明已经生效主控请求这两个网站的内容会直接去这个服务器请求这样就绕过了官方服务器的验证安装控制面板这里参考整理的直接在主控执行这条命令即可控制面板占用内存内存不足会安装失败出现下图页面即安装成功通过直接访问即可如果出现报错等中止安装大多数情况是你的系统不是或开心版只支持或系统其它系统肯定无法正常运行管理员账号和密码普通用户账号和密码版本的主控有严重的安全漏洞普通用户生成的通过某些方法可以拿到管理员权限请自行根据此方法修复五节点服务器配置我用了两台做节点节点需要开放端口一台系统的纽约内存做节点接管中国大陆移动以及海外等其他流量一台系统的新加坡内存做节点接管中国大陆的电信和联通流量以节点为例节点同理更新的源添加虚拟内存内存及以下的小鸡必须添加否则会报错以上内存的可自行决定是否添加添加我参考的这篇文章先用查看一下的大小使用命令创建这么一个分区文件文件的大小是个一般情况下个为所以这里空间是接着再把这个分区变成分区再接着使用这个分区使其成为有效状态现在再用命令查看一下内存和分区大小就发现增加了的空间了修改文件在文件末尾增加如下一行实现开机自动挂载安装被控服务进入管理员控制台系统管理系统升级复制节点安装命令并在节点和节点等节点服务器执行替换为你自己的在面板查看例如我执行的脚本为下图即为安装成功被控服务会自己安装等安装从下图就可以看出丢包对的影响有多大安装我用的以下这条命令参考从流量控制算法谈网络优化从到算法卸载节点如果节点想换到另一台主控或者不想占用可以执行这条命令卸载节点六控制台必要配置官方安装文档安装说明使用文档添加节点即主控与被控服务建立连接添加方法如下图会提示先修改密码修改密码在系统管理用户管理内存小鸡通常会出现同步以下报错这是因为内存不够解决办法是添加虚拟内存即可设置设置可配置通过来与第三方提供商无缝对接来生成网站的目前支持国内版和获取密钥具体参考官方设置线路分组设置分线路解析只有服务商支持分线路解析才可以设置分线路解析例如这类国外服务就不支持分线路解析还可以为设置权重权重越大用户访问该相对越多添加套餐名称套餐名称用户端也会显示这个描述套餐的说明也会显示到用户端的套餐购买列表分配给用户输入用户的表示指定该套餐为该用户的专属套餐只有这个用户能购买此套餐线路分组上一步添加的线路组或其它分组决定网站绑定此套餐后网站配置分发到的节点以及解析的套餐分组为套餐分组分组也会显示到用户端的套餐购买页面方便归类购买域名生成网站使用的域名默认为之前设置中的主域名可以输入其它的域名但此域名必须跟主域名在同一个账号下月流量为单位限制该套餐一个自然月内使用流量的上限域名数该套餐允许的域名数量域名数量包括裸域名及各级域名如算两域名非端口数可以输入非的端口此项可以限制非标端口的数量不允许的话设置为四层转发端口数四层转发允许的端口数自定义规则如果此项为允许用户则可以创建自己的规则并绑定到网站使用如果为禁止则用户只允许选择系统内置的规则排序默认小值排在前面带宽为负值表示无限制连接数为负值表示不限制连接数添加网站用管理员权限在系统管理用户管理创建一个用户以用户登录然后购买免费的高级套餐在网站管理分组管理新增分组后就可以添加网站了节点监控介绍此节内容于补充我的云端伪装站点只可以使用监控监控均无法生效目前不知到什么原因更新此可以监控看来是宝塔等问题节点自动切换的规则的节点监控支持主节点宕机自动暂停并删除该条解析记录如果设置了备用节点会用一个备用节点替换已失效的主节点并同步解析记录当主节点再次恢复正常自动启用主节点并且取消使用备用节点同时会增加主节点记录删去备用节点的解析记录以上操作均为系统自动执行无需人工干预可以选择配置发信服务可以收到节点失效节点恢复切换操作等通知单节点设置可以限制节点机器的文件缓存大小不要超过硬盘本身大小可以设置节点出站速度这里的代理设置应该不是指节点到用户这段可以通过代理加速代理似乎也只支持代理因为我给节点添加代理后我在云端监控云端伪装站点的服务器监听到了它与代理进行通信我猜测是系统执行定时任务检查时如果给节点配置了代理云端监控通过代理去访问节点当代理无效或非代理时还会报错此时同步等功能会失效禁用多用户必设置重要重要重要存在重大漏洞普通用户生成的通过某些方法可以拿到管理员权限解决方法就是禁用首先在控制台系统管理系统设置用户相关限制普通用户只能从此域名登录和限制管理员只能从此域名登录再依次在这两个登录域名设置禁止的所有访问版本的路径是执行的必要路径封禁就可以避免被黑了限制从域名登录是避免从源站访问到了限制管理员是二次防火墙如果黑客获取了权限但是不知道你的管理员登录地址他就只能对普通用户更改七控制台推荐配置设置防护这个根据自己需要设置就好了还可以自定义规则比如设置单内最大访问资源数为单个资源最大次数为这个防一般的单攻击很有效推荐设置需要自己测压可以参考这篇记录一些发卡站避免被机器人检查可以设置访问该域名需要点击验证设置缓存文件类型这个也是根据自己网站的资源类型以下是我博客的设置缓存设置建议参考官方文档缓存配置使用文档默认为不缓存任何文件设置节点服务器缓存大小和最大带宽申请证书的证书是自动续签的申请证书很简单有两种方法一种是一键申请一种是在网站管理证书管理我的证书中申请证书当然也可以上传自己的证书如果没有申请成功可以在我的网站高级配置中开启请求回源八控制台其他配置短信邮箱提示这里就是设置服务等都支持发信可以参考篇记录获取你的专用密码获取等邮箱的账号密码也可以用自己的域名邮箱发件我在这里演示过使用的邮件推送服务邮件推送主控必须开放相应端口才可以连接发件服务器从而正常发件如果确认的配置没问题但是显示无法连接可以检查主控服务器相应端口是否开放对接支付需要支付功能请参考充值设置转发转发容易封禁端口不建议用服务器做转发面板通过域名访问直接套或者套其它也可以用其他机器反代但感觉没必要节点监控和宕机自动切换需要配置节点超时会提示和开启宕机自动切换自动切换设置反代这个功能就是指定回源实现反代的功能比如想给套第三方就需要在第三方配置回源指向的绑定域名举个指定回源实现反代的功能的例子源站现在用反代源站如果直接给配置普通设置回源站点是解析出的然后发送请求为域名因为源站点没有配置这个站点访问就会报错但是设置指定回源为设置回源请求就是是回源域名是这样就可以成功访问了九备份和恢复提供了非常简单的备份和恢复功能备份主控默认会每两小时备份数据库备份默认保留天可以自行修改保留天数备份文件在除了备份数据库还需要备份文件夹下的文件其实记住和就行了恢复时只需要用到这两个文件为了防止主控失联建议每天上传备份每日自动上传备份我这里只是记录一下我的操作可能不适合你恢复此操作参考官网亲测有效旧主控将旧主控下的某个时间的数据库备份包如下载到本地重命名为将旧主控的文件也下载下来关闭旧主控这里记得关闭如果不关闭的话新旧主控同时运行会出现后台任务只创建但不执行导致新主控无法正常运行新主控首先正常执行安装主控命令如果有需要自授权请先搭建云端修改然后连接新主控恢复备份和初始化进入主控目录将上节备份的数据库文件上传到目录在目录下执行以下两条命令恢复数据库将上节备份的旧主控上传新主控相同位置实现替换掉新主控的文件依次执行以下四条命令初始化至此主控设置完成通过旧主控的账号密码进入可以发现节点用户网站日志等都恢复了接下来只需要对旧节点更换即可旧节点需要将旧节点的旧主控替换为新主控的依次在登录每个节点并执行下面命令即可将替换为你自己的新主控新节点新节点安装方式和旧节点安装方式一样只需要将旧主控修改为新主控密码修改为旧主控密码即可旧主控密码忘记了可以在可以找到十杂谈你也可以像我博客一样将境外流量接入到加速国内走优化节点具体教程可以参考配置详解测压注意不要用源站机器去攻击可能为了回源请求成功给源站加了白名单我之前遇到这个问题纠结好久还以为是规则有问题最后才知道小丑是我自己如果源站开启了防御记得将加入白名单主控迁移可以参考官方支持添加泛域名只要待添加域名的服务商支持泛域名解析即可统计流量似乎只计算节点到用户出站这个过程消耗的流量用户到节点入站节点到源服务器出站源服务器到节点入站均不计入套餐流量如果服务器为双向计费请注意设置价格以下是我的测试记录我先通过套在客户端跑测速发包收包流量都大测得入站流量出站总流量套餐显示流量消耗我又通过客户端批量发包发包流量小收包流量大测得入站流量出站总流量套餐显示流量消耗斯巴达等服务商提供的系统无法安装需要新的斯巴达镜像已支持服务器的方法可以看我的这篇记录常见合集中文域名直接添加会报错需要在将中文字符转换成格式添加主控安装好后可以装宝塔吗主控装完后会占用端口单纯装个宝塔是只占用端口宝塔再装会占用端口很明显你端口需要给主控所以你可以改一下宝塔的端口比如改为改为不建议新手尝试添加节点失败原因没有权限错误号应该是密码错了请前往主控的系统管理系统升级中查看密码报错添加节点失败原因没有权限是因为节点密码没有换成自己的去主控的系统升级查看',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-08-12 07:40:41',
+  postMainColor: '',
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#18171d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f7f9fe')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
+          const isLightMode = window.matchMedia('(prefers-color-scheme: light)').matches
+          const isNotSpecified = window.matchMedia('(prefers-color-scheme: no-preference)').matches
+          const hasNoSupport = !isDarkMode && !isLightMode && !isNotSpecified
+
+          if (t === undefined) {
+            if (isLightMode) activateLightMode()
+            else if (isDarkMode) activateDarkMode()
+            else if (isNotSpecified || hasNoSupport) {
+              const now = new Date()
+              const hour = now.getHours()
+              const isNight = hour <= 6 || hour >= 18
+              isNight ? activateDarkMode() : activateLightMode()
+            }
+            window.matchMedia('(prefers-color-scheme: dark)').addListener(e => {
+              if (saveToLocal.get('theme') === undefined) {
+                e.matches ? activateDarkMode() : activateLightMode()
+              }
+            })
+          } else if (t === 'light') activateLightMode()
+          else activateDarkMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><!-- hexo injector head_end start --><script defer src="/sw-dom.js"></script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head><body data-type="anzhiyu"><div id="web_bg"></div><div id="an_music_bg"></div><div id="loading-box" onclick="document.getElementById(&quot;loading-box&quot;).classList.add(&quot;loaded&quot;)"><div class="loading-bg"><img class="loading-img nolazyload" alt="加载头像" src="https://pict.399699.xyz/d/CAACAgUAAx0Ea55INgACA8dmxVZRdYGpsxjqqiFZVAOEMqlgLgACSxAAAiKFKFYF4Wxv3uRCjzUE"/><div class="loading-image-dot"></div></div></div><script>const preloader = {
+  endLoading: () => {
+    document.getElementById('loading-box').classList.add("loaded");
+  },
+  initLoading: () => {
+    document.getElementById('loading-box').classList.remove("loaded")
+  }
+}
+window.addEventListener('load',()=> { preloader.endLoading() })
+setTimeout(function(){preloader.endLoading();},10000)
+
+if (true) {
+  document.addEventListener('pjax:send', () => { preloader.initLoading() })
+  document.addEventListener('pjax:complete', () => { preloader.endLoading() })
+}</script><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><div id="nav-group"><span id="blog_name"><div class="back-home-button"><i class="anzhiyufont anzhiyu-icon-grip-vertical"></i><div class="back-menu-list-groups"><div class="back-menu-list-group"><div class="back-menu-list-title">网页</div><div class="back-menu-list"><a class="back-menu-item" target="_blank" rel="noopener" href="https://oior.net/" title="博客(Typecho系统)"><img class="back-menu-item-icon" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://oior.net/img/favicon.png" alt="博客(Typecho系统)"/><span class="back-menu-item-text">博客(Typecho系统)</span></a></div></div><div class="back-menu-list-group"><div class="back-menu-list-title">其他</div><div class="back-menu-list"><a class="back-menu-item" target="_blank" rel="noopener" href="https://disk.399699.xyz/" title="网盘"><img class="back-menu-item-icon" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACA8tmxViib-Bpt4IBsvCmPPo1MLaNLwACUxAAAiKFKFZ15JfRYFeCTDUE" alt="网盘"/><span class="back-menu-item-text">网盘</span></a><a class="back-menu-item" target="_blank" rel="noopener" href="https://picture.399699.xyz/" title="图床"><img class="back-menu-item-icon" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACA8xmxVi_5aq1eozG9prwluJEnpK-owACVBAAAiKFKFaqVEKUvwrD9jUE" alt="图床"/><span class="back-menu-item-text">图床</span></a></div></div></div></div><a id="site-name" href="/" accesskey="h"><div class="title">文一刀</div><i class="anzhiyufont anzhiyu-icon-house-chimney"></i></a><div id="he-plugin-simple"></div><script>var WIDGET = {
+  "CONFIG": {
+    "modules": "0124",
+    "background": "2",
+    "tmpColor": "FFFFFF",
+    "tmpSize": "16",
+    "cityColor": "FFFFFF",
+    "citySize": "16",
+    "aqiColor": "E8D87B",
+    "aqiSize": "16",
+    "weatherIconSize": "24",
+    "alertIconSize": "18",
+    "padding": "10px 10px 10px 10px",
+    "shadow": "0",
+    "language": "auto",
+    "borderRadius": "20",
+    "fixed": "true",
+    "vertical": "top",
+    "horizontal": "left",
+    "left": "20",
+    "top": "7.1",
+    "key": "df245676fb434a0691ead1c63341cd94"
+  }
+}
+</script><link rel="stylesheet" href="https://widget.qweather.net/simple/static/css/he-simple.css?v=1.4.0"/><script src="https://widget.qweather.net/simple/static/js/he-simple.js?v=1.4.0"></script></span><div class="mask-name-container"><div id="name-container"><a id="page-name" href="javascript:anzhiyu.scrollToDest(0, 500)">PAGE_NAME</a></div></div><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="javascript:void(0);"><span> 文章</span></a><ul class="menus_item_child"><li><a class="site-page child faa-parent animated-hover" href="/archives/"><i class="anzhiyufont anzhiyu-icon-box-archive faa-tada" style="font-size: 0.9em;"></i><span> 隧道</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/categories/"><i class="anzhiyufont anzhiyu-icon-shapes faa-tada" style="font-size: 0.9em;"></i><span> 分类</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/tags/"><i class="anzhiyufont anzhiyu-icon-tags faa-tada" style="font-size: 0.9em;"></i><span> 标签</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><span> 友链</span></a><ul class="menus_item_child"><li><a class="site-page child faa-parent animated-hover" href="/link/"><i class="anzhiyufont anzhiyu-icon-link faa-tada" style="font-size: 0.9em;"></i><span> 友人帐</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/fcircle/"><i class="anzhiyufont anzhiyu-icon-artstation faa-tada" style="font-size: 0.9em;"></i><span> 朋友圈</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/comments/"><i class="anzhiyufont anzhiyu-icon-envelope faa-tada" style="font-size: 0.9em;"></i><span> 留言板</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><span> 我的</span></a><ul class="menus_item_child"><li><a class="site-page child faa-parent animated-hover" href="/music/"><i class="anzhiyufont anzhiyu-icon-music faa-tada" style="font-size: 0.9em;"></i><span> 音乐馆</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/album/"><i class="anzhiyufont anzhiyu-icon-images faa-tada" style="font-size: 0.9em;"></i><span> 相册集</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><span> 关于</span></a><ul class="menus_item_child"><li><a class="site-page child faa-parent animated-hover" href="/about/"><i class="anzhiyufont anzhiyu-icon-paper-plane faa-tada" style="font-size: 0.9em;"></i><span> 关于本人</span></a></li><li><a class="site-page child faa-parent animated-hover" href="javascript:toRandomPost()"><i class="anzhiyufont anzhiyu-icon-shoe-prints1 faa-tada" style="font-size: 0.9em;"></i><span> 随便逛逛</span></a></li></ul></div></div></div><div id="nav-right"><div class="nav-button only-home" id="travellings_button" title="随机前往一个开往项目网站"><a class="site-page" onclick="anzhiyu.totraveling()" title="随机前往一个开往项目网站" href="javascript:void(0);" rel="external nofollow" data-pjax-state="external"><i class="anzhiyufont anzhiyu-icon-train"></i></a></div><div class="nav-button" id="randomPost_button"><a class="site-page" onclick="toRandomPost()" title="随机前往一个文章" href="javascript:void(0);"><i class="anzhiyufont anzhiyu-icon-dice"></i></a></div><div class="nav-button" id="search-button"><a class="site-page social-icon search" href="javascript:void(0);" title="搜索🔍" accesskey="s"><i class="anzhiyufont anzhiyu-icon-magnifying-glass"></i><span> 搜索</span></a></div><input id="center-console" type="checkbox"/><label class="widget" for="center-console" title="中控台" onclick="anzhiyu.switchConsole();"><i class="left"></i><i class="widget center"></i><i class="widget right"></i></label><div id="console"><div class="console-card-group-reward"><ul class="reward-all console-card"><li class="reward-item"><a href="https://npm.elemecdn.com/anzhiyu-blog@1.1.6/img/post/common/qrcode-weichat.png" target="_blank"><img class="post-qr-code-img" alt="微信" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://npm.elemecdn.com/anzhiyu-blog@1.1.6/img/post/common/qrcode-weichat.png"/></a><div class="post-qr-code-desc">微信</div></li><li class="reward-item"><a href="https://npm.elemecdn.com/anzhiyu-blog@1.1.6/img/post/common/qrcode-alipay.png" target="_blank"><img class="post-qr-code-img" alt="支付宝" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://npm.elemecdn.com/anzhiyu-blog@1.1.6/img/post/common/qrcode-alipay.png"/></a><div class="post-qr-code-desc">支付宝</div></li></ul></div><div class="console-card-group"><div class="console-card-group-left"><div class="console-card" id="card-newest-comments"><div class="card-content"><div class="author-content-item-tips">互动</div><span class="author-content-item-title"> 最新评论</span></div><div class="aside-list"><span>正在加载中...</span></div></div></div><div class="console-card-group-right"><div class="console-card tags"><div class="card-content"><div class="author-content-item-tips">兴趣点</div><span class="author-content-item-title">寻找你感兴趣的领域</span><div class="card-tags"><div class="item-headline"></div><div class="card-tag-cloud"><a href="/tags/AI/" style="font-size: 1.05rem;">AI<sup>1</sup></a><a href="/tags/Aria2/" style="font-size: 1.05rem;">Aria2<sup>1</sup></a><a href="/tags/Chevereto/" style="font-size: 1.05rem;">Chevereto<sup>1</sup></a><a href="/tags/CloudFlar/" style="font-size: 1.05rem;">CloudFlar<sup>2</sup></a><a href="/tags/Cloudflare/" style="font-size: 1.05rem;">Cloudflare<sup>3</sup></a><a href="/tags/Doprax/" style="font-size: 1.05rem;">Doprax<sup>1</sup></a><a href="/tags/Heroku/" style="font-size: 1.05rem;">Heroku<sup>1</sup></a><a href="/tags/Koyeb/" style="font-size: 1.05rem;">Koyeb<sup>1</sup></a><a href="/tags/MTP/" style="font-size: 1.05rem;">MTP<sup>1</sup></a><a href="/tags/PagerMaid-Pyro/" style="font-size: 1.05rem;">PagerMaid-Pyro<sup>1</sup></a><a href="/tags/Quartus-II/" style="font-size: 1.05rem;">Quartus II<sup>1</sup></a><a href="/tags/Rclone/" style="font-size: 1.05rem;">Rclone<sup>1</sup></a><a href="/tags/Silvaco/" style="font-size: 1.05rem;">Silvaco<sup>1</sup></a><a href="/tags/Telegram/" style="font-size: 1.05rem;">Telegram<sup>1</sup></a><a href="/tags/Verilog/" style="font-size: 1.05rem;">Verilog<sup>1</sup></a><a href="/tags/Virtualizor/" style="font-size: 1.05rem;">Virtualizor<sup>1</sup></a><a href="/tags/WHMCS/" style="font-size: 1.05rem;">WHMCS<sup>1</sup></a><a href="/tags/hexo/" style="font-size: 1.05rem;">hexo<sup>1</sup></a><a href="/tags/modelsim/" style="font-size: 1.05rem;">modelsim<sup>1</sup></a><a href="/tags/modelsim-altera/" style="font-size: 1.05rem;">modelsim-altera<sup>1</sup></a><a href="/tags/%E4%BC%98%E9%80%89IP/" style="font-size: 1.05rem;">优选IP<sup>4</sup></a><a href="/tags/%E5%9B%BE%E5%BA%8A/" style="font-size: 1.05rem;">图床<sup>1</sup></a><a href="/tags/%E5%A4%87%E4%BB%BD/" style="font-size: 1.05rem;">备份<sup>1</sup></a><a href="/tags/%E6%9C%BA%E5%99%A8%E4%BA%BA/" style="font-size: 1.05rem;">机器人<sup>1</sup></a><a href="/tags/%E6%A0%A1%E5%9B%AD%E7%BD%91/" style="font-size: 1.05rem;">校园网<sup>2</sup></a><a href="/tags/%E8%84%9A%E6%9C%AC/" style="font-size: 1.05rem;">脚本<sup>1</sup></a><a href="/tags/%E8%A7%86%E9%A2%91/" style="font-size: 1.05rem;">视频<sup>1</sup></a><a href="/tags/%E8%AE%B0%E4%BA%8B%E6%9C%AC/" style="font-size: 1.05rem;">记事本<sup>1</sup></a><a href="/tags/%E8%BD%AC%E5%8F%91/" style="font-size: 1.05rem;">转发<sup>1</sup></a><a href="/tags/%E9%87%87%E8%AE%BF/" style="font-size: 1.05rem;">采访<sup>1</sup></a></div></div><hr/></div></div><div class="console-card history"><div class="item-headline"><i class="anzhiyufont anzhiyu-icon-box-archiv"></i><span>文章</span></div><div class="card-archives"><div class="item-headline"><i class="anzhiyufont anzhiyu-icon-archive"></i><span>归档</span><a class="card-more-btn" href="/archives/" title="查看更多">
+    <i class="anzhiyufont anzhiyu-icon-angle-right"></i></a></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2024/08/"><span class="card-archive-list-date">八月 2024</span><div class="card-archive-list-count-group"><span class="card-archive-list-count">2</span><span>篇</span></div></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2024/06/"><span class="card-archive-list-date">六月 2024</span><div class="card-archive-list-count-group"><span class="card-archive-list-count">2</span><span>篇</span></div></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2024/05/"><span class="card-archive-list-date">五月 2024</span><div class="card-archive-list-count-group"><span class="card-archive-list-count">5</span><span>篇</span></div></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2024/04/"><span class="card-archive-list-date">四月 2024</span><div class="card-archive-list-count-group"><span class="card-archive-list-count">7</span><span>篇</span></div></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2024/02/"><span class="card-archive-list-date">二月 2024</span><div class="card-archive-list-count-group"><span class="card-archive-list-count">1</span><span>篇</span></div></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2024/01/"><span class="card-archive-list-date">一月 2024</span><div class="card-archive-list-count-group"><span class="card-archive-list-count">5</span><span>篇</span></div></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/08/"><span class="card-archive-list-date">八月 2023</span><div class="card-archive-list-count-group"><span class="card-archive-list-count">3</span><span>篇</span></div></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/07/"><span class="card-archive-list-date">七月 2023</span><div class="card-archive-list-count-group"><span class="card-archive-list-count">10</span><span>篇</span></div></a></li></ul></div><hr/></div></div></div><div class="button-group"><div class="console-btn-item"><a class="darkmode_switchbutton" title="显示模式切换" href="javascript:void(0);"><i class="anzhiyufont anzhiyu-icon-moon"></i></a></div><div class="console-btn-item" id="consoleHideAside" onclick="anzhiyu.hideAsideBtn()" title="边栏显示控制"><a class="asideSwitch"><i class="anzhiyufont anzhiyu-icon-arrows-left-right"></i></a></div><div class="console-btn-item" id="consoleMusic" onclick="anzhiyu.musicToggle()" title="音乐开关"><a class="music-switch"><i class="anzhiyufont anzhiyu-icon-music"></i></a></div></div><div class="console-mask" onclick="anzhiyu.hideConsole()" href="javascript:void(0);"></div></div><div class="nav-button" id="nav-totop"><a class="totopbtn" href="javascript:void(0);"><i class="anzhiyufont anzhiyu-icon-arrow-up"></i><span id="percent" onclick="anzhiyu.scrollToDest(0,500)">0</span></a></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);" title="切换"><i class="anzhiyufont anzhiyu-icon-bars"></i></a></div></div></div></nav><div id="post-info"><div id="post-firstinfo"><div class="meta-firstline"><a class="post-meta-original">原创</a><span class="post-meta-categories"><span class="post-meta-separator"></span><i class="anzhiyufont anzhiyu-icon-inbox post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E9%BB%98%E8%AE%A4%E5%88%86%E7%B1%BB/" itemprop="url">默认分类</a></span><span class="article-meta tags"></span></div></div><h1 class="post-title" itemprop="name headline">使用cdnfly自建CDN并配置CC防护</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="anzhiyufont anzhiyu-icon-calendar-days post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" itemprop="dateCreated datePublished" datetime="2023-08-07T04:45:00.000Z" title="发表于 2023-08-07 12:45:00">2023-08-07</time><span class="post-meta-separator"></span><i class="anzhiyufont anzhiyu-icon-history post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" itemprop="dateCreated datePublished" datetime="2024-08-11T23:40:41.849Z" title="更新于 2024-08-12 07:40:41">2024-08-12</time></span></div><div class="meta-secondline"><span class="post-meta-separator"></span><span class="post-meta-wordcount"><i class="anzhiyufont anzhiyu-icon-file-word post-meta-icon" title="文章字数"></i><span class="post-meta-label" title="文章字数">字数总计:</span><span class="word-count" title="文章字数">5.6k</span><span class="post-meta-separator"></span><i class="anzhiyufont anzhiyu-icon-clock post-meta-icon" title="阅读时长"></i><span class="post-meta-label" title="阅读时长">阅读时长:</span><span>19分钟</span></span><span class="post-meta-separator"></span><span id="" data-flag-title="使用cdnfly自建CDN并配置CC防护"><i class="anzhiyufont anzhiyu-icon-fw-eye post-meta-icon"></i><span class="post-meta-label" title="阅读量">阅读量:</span><span class="waline-pageview-count" data-path="/2023/08/07/%E4%BD%BF%E7%94%A8cdnfly%E8%87%AA%E5%BB%BAcdn%E5%B9%B6%E9%85%8D%E7%BD%AEcc%E9%98%B2%E6%8A%A4/" title="访问量"><i class="anzhiyufont anzhiyu-icon-spinner anzhiyu-spin"></i></span></span><span class="post-meta-separator">       </span><span class="post-meta-position" title="作者IP属地为China"><i class="anzhiyufont anzhiyu-icon-location-dot"></i>China</span></div></div></div><section class="main-hero-waves-area waves-area"><svg class="waves-svg" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto"><defs><path id="gentle-wave" d="M -160 44 c 30 0 58 -18 88 -18 s 58 18 88 18 s 58 -18 88 -18 s 58 18 88 18 v 44 h -352 Z"></path></defs><g class="parallax"><use href="#gentle-wave" x="48" y="0"></use><use href="#gentle-wave" x="48" y="3"></use><use href="#gentle-wave" x="48" y="5"></use><use href="#gentle-wave" x="48" y="7"></use></g></svg></section><div id="post-top-cover"><img class="nolazyload" id="post-top-bg" src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACA3VmuEYalzG0lSVQIzLBJ4Lba_MZJAACPxIAAg4EwFVYWETVPO9D1DUE"></div></header><main id="blog-container"><div class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container" itemscope itemtype="http://example.com/2023/08/07/%E4%BD%BF%E7%94%A8cdnfly%E8%87%AA%E5%BB%BAcdn%E5%B9%B6%E9%85%8D%E7%BD%AEcc%E9%98%B2%E6%8A%A4/"><header><a class="post-meta-categories" href="/categories/%E9%BB%98%E8%AE%A4%E5%88%86%E7%B1%BB/" itemprop="url">默认分类</a><h1 id="CrawlerTitle" itemprop="name headline">使用cdnfly自建CDN并配置CC防护</h1><span itemprop="author" itemscope itemtype="http://schema.org/Person">First</span><time itemprop="dateCreated datePublished" datetime="2023-08-07T04:45:00.000Z" title="发表于 2023-08-07 12:45:00">2023-08-07</time><time itemprop="dateCreated datePublished" datetime="2024-08-11T23:40:41.849Z" title="更新于 2024-08-12 07:40:41">2024-08-12</time></header><p><strong>更新：</strong></p>
+<p>2023.3.30 修正了第三节”自建云端的错误”，伪装授权站需要一直存在<br>2023.4.02 修复了国内机器无法连接github的问题，即增加了国内机器可访问的安装脚本<br>2023.4.14 新增了cdnfly设置回源host实现反代的介绍<br>2023.4.24 修复了伪装站点监控失效的情况，更新了cdnfly的节点监控功能说明<br>2023.5.21 cdnfly5.1.13存在重大漏洞，普通用户生成的API通过某些方法可以拿到管理员权限<br>2023.7.23 删除了国内机器安装脚本 请自行挂代理<br>2023.7.24 新增 [备份和恢复]记录<br>2023.7.25 更新主控&amp;节点安装命令</p>
+<h2 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h2><p>本文记录一下使用 <a target="_blank" rel="noopener" href="http://www.cdnfly.cn/">[Cdnfly - 自建cdn|防CC攻击|cdn软件|cdn系统]</a> 搭建CDN系统，保姆级教程 适合小白食用<br>个人感觉<code>自建CDN</code>和<code>反代网站</code>效果都差不多，都可以实现加速 缓存 防攻击等功能，但我暂时还不是很懂nginx相关配置，相较而言 自建CDN更容易批量维护和管理各节点<br>官方安装文档：<a target="_blank" rel="noopener" href="http://doc.cdnfly.cn/1791543">安装说明 · Cdnfly使用文档</a></p>
+<h2 id="二、准备"><a href="#二、准备" class="headerlink" title="二、准备"></a>二、准备</h2><blockquote>
+<p>主控和被控均不能在 已安装nginx的情况下 执行安装命令，必须确保80 443端口未被占用!!!</p>
+<p>系统必须为centos7或ubuntu16.04 !!! debian11 ubuntu20 centos8 centos6等系统都不支持</p>
+<p>主控需开放80 88 443 9200端口</p>
+<p>节点需要开放 80 443 5000端口</p>
+</blockquote>
+<ul>
+<li>一台最小4GB内存的服务器(vps)做主控(cdn面板控制台)</li>
+<li>若干服务器做CDN节点</li>
+<li>系统：cdnfly主控和被控节点暂时仅支持Centos-7和Ubuntu 16.04系统</li>
+</ul>
+<blockquote>
+<p>本文以一台centos7系统的hetzner 4GB内存vps <code>167.235.134.18</code> 做主控</p>
+<p>一台任何系统的vps <code>63.251.217.137</code> 搭建伪装授权站点，即cdnfly自建云端</p>
+<p>一台centos7系统的DO纽约 512MB内存vps <code>192.241.156.51</code> 做节点2 接管中国大陆移动以及海外等其他流量</p>
+<p>一台centos7系统的DO新加坡 512MB内存vps <code>157.245.154.23</code> 做节点2 接管中国大陆的电信和联通流量</p>
+<p>为什么用DO 主要是我就知道这一家有0.5GB小内存，虽然这款比一些4GB内存的都贵 但为了测试512MB内存可用 还是选择了DO</p>
+<p>为什么CDN节点机器用0.5GB内存小鸡 大部分廉价的国内优化机器只有0.5GB内存</p>
+</blockquote>
+<h2 id="三、cdnfly自建云端"><a href="#三、cdnfly自建云端" class="headerlink" title="三、cdnfly自建云端"></a>三、cdnfly自建云端</h2><blockquote>
+<p>有cdnfly官方授权的可跳过这一步，需要购买正版授权请前往 <a target="_blank" rel="noopener" href="http://www.cdnfly.cn/package.html">官网购买</a></p>
+<p>因为我就是临时个人测试使用，官方那个有些贵，就采用 ccclt 大佬分享的的 <a target="_blank" rel="noopener" href="https://hostloc.com/thread-1044609-1-1.html">绕过授权方法</a></p>
+<p>盗版可耻 开发不易 有条件请用正版<br><strong>cdnfly自建云端搭建方法：</strong><br>用 <a target="_blank" rel="noopener" href="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgADLmW49O5pf6OtmAhE5MV747k8ItvmAAJ7EAACecnIVUBQ9IKT8GpENAQ">这个源码</a> 搭建一个站点，绑定域名auth.cdnfly.cn、monitor.cdnfly.cn ,并根据文件中的nginx伪静态配置设置伪静态。<br>建议自己搭建，不过也可以用我的，但是我的站点哪一天没了，你的机器会提示授权过期 到时候还是需要你自己搭建<br>我用宝塔搭建大概为这样：<br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAfRmFWlw1YTOf4BsN4eQVivDf80FYAACxA8AAmSdsVSFX81B-5zbTzQE" alt="Alt Text"><br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAfNmFWlfAn8LwxssG44GGrfOe3uRcwACww8AAmSdsVRMLdzvO77G0zQE" alt="Alt Text"><br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAfJmFWlTIQVzno3lL9LBsp8hU9bPnwACwg8AAmSdsVQHejuzxXYxgzQE" alt="Alt Text"><br>我的只能使用http监控，tcp ping监控都无法正常工作，可能和宝塔有关<br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAfFmFWlAys0itDf_E84GWDwYNQAB6qQAAsEPAAJknbFUHidgeiz-DhM0BA" alt="Alt Text"></p>
+</blockquote>
+<h2 id="四、主控服务器设置"><a href="#四、主控服务器设置" class="headerlink" title="四、主控服务器设置"></a>四、主控服务器设置</h2><p>主控需要开放 80 88 443 9200端口，并且主控和节点机不能安装在同一机器上，会导致80端口冲突<br>主控若未开启9200 88端口 会导致程序大量占用CPU直至死机，如有任何问题 建议重置elasticsearch</p>
+<h4 id="1、首先更新centos7源"><a href="#1、首先更新centos7源" class="headerlink" title="1、首先更新centos7源"></a>1、首先更新centos7源</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">yum update -y &amp;&amp; yum upgrade -y</span><br></pre></td></tr></table></figure>
+
+<h4 id="2、修改主控vps的hosts文件"><a href="#2、修改主控vps的hosts文件" class="headerlink" title="2、修改主控vps的hosts文件"></a>2、修改主控vps的hosts文件</h4><p>修改主控vps的hosts文件，将 auth.cdnfly.cn、monitor.cdnfly.cn 这2个域名指向刚才的自建云端服务器IP <code>63.251.217.137</code><br>修改hosts意义是 主控vps请求 <code>auth.cdnfly.cn</code> <code>monitor.cdnfly.cn</code> 这两个网站的内容会直接去 <code>63.251.217.137</code> 这个服务器请求，这样就绕过了官方服务器的验证</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">vi /etc/hosts</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">#添加以下内容，记得替换为你自己搭建的IP 你就用这个IP也行</span><br><span class="line">63.251.217.137 auth.cdnfly.cn monitor.cdnfly.cn</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">#2023.6.17更新云端IP 此IP可以tcp监控</span><br><span class="line">#51.81.222.246 auth.cdnfly.cn monitor.cdnfly.cn</span><br></pre></td></tr></table></figure>
+
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAfBmFWktgprF5hdE9WDx-UR7yJoHVwACwA8AAmSdsVRdAAGKmva-9t00BA" alt="Alt Text"></p>
+<h4 id="3、检查hosts是否生效"><a href="#3、检查hosts是否生效" class="headerlink" title="3、检查hosts是否生效"></a>3、检查hosts是否生效</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ping auth.cdnfly.cn</span><br><span class="line">ping monitor.cdnfly.cn</span><br><span class="line">#如果都返回 63.251.217.137 说明hosts已经生效，主控vps请求 `auth.cdnfly.cn` `monitor.cdnfly.cn` 这两个网站的内容会直接去 `63.251.217.137` 这个服务器请求，这样就绕过了官方服务器的验证</span><br></pre></td></tr></table></figure>
+
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAe9mFWkafjsu3ZZG7yLFnKPf66CWaAACvw8AAmSdsVSHvIB42g65sDQE" alt="Alt Text"></p>
+<h4 id="4、安装cdnfly控制面板"><a href="#4、安装cdnfly控制面板" class="headerlink" title="4、安装cdnfly控制面板"></a>4、安装cdnfly控制面板</h4><p>这里参考 <a target="_blank" rel="noopener" href="https://github.com/Steady-WJ/cdnfly-kaixin">Steady-WJ</a> 整理的</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">#直接在主控vps执行这条命令即可，控制面板占用3GB内存，内存不足会安装失败</span><br><span class="line"></span><br><span class="line">curl -fsSL https://github.com/Steady-WJ/cdnfly-kaixin/raw/main/master.sh -o master.sh &amp;&amp; chmod +x master.sh &amp;&amp; ./master.sh --es-dir /home/es</span><br></pre></td></tr></table></figure>
+
+<p>出现下图页面即安装成功，通过 IP <code>http://167.235.134.18</code> 直接访问即可</p>
+<blockquote>
+<p>如果出现报错等中止安装，大多数情况是你的系统不是centos7或ubuntu16.04，cdnfly开心版只支持centos7或ubuntu16.04系统，其它系统肯定无法正常运行<br>管理员账号和密码： wenjian&#x2F;wenjian<br>普通用户账号和密码： ceshi&#x2F;ceshi<br>5.1.12版本的主控有严重的 [安全漏洞]</p>
+<p>普通用户生成的API通过某些方法可以拿到管理员权限，请自行根据 [此方法] 修复<br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAe5mFWkGWIAmNw0Khwpwi2JOKbAG2AACvg8AAmSdsVQULkavqE3ELTQE" alt="Alt Text"><br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAe1mFWjapvouXgbTeL6VuvUWhSNLLgACvQ8AAmSdsVRbeAExhrgLxTQE" alt="Alt Text"></p>
+</blockquote>
+<h2 id="五、CDN节点服务器配置"><a href="#五、CDN节点服务器配置" class="headerlink" title="五、CDN节点服务器配置"></a>五、CDN节点服务器配置</h2><p>我用了两台做CDN节点，节点需要开放80 443 5000端口<br>一台centos7系统的DO纽约 512MB内存vps <code>192.241.156.51</code> 做节点2 接管中国大陆移动以及海外等其他流量<br>一台centos7系统的DO新加坡 512MB内存vps <code>157.245.154.23</code> 做节点2 接管中国大陆的电信和联通流量<br>以节点1 <code>192.241.156.51</code> 为例，节点2 <code>157.245.154.23</code> 同理</p>
+<h4 id="1、更新centos7的源"><a href="#1、更新centos7的源" class="headerlink" title="1、更新centos7的源"></a>1、更新centos7的源</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">yum update -y</span><br></pre></td></tr></table></figure>
+
+<h4 id="2、添加SWAP虚拟内存"><a href="#2、添加SWAP虚拟内存" class="headerlink" title="2、添加SWAP虚拟内存"></a>2、添加SWAP虚拟内存</h4><blockquote>
+<p>1GB内存及以下的小鸡必须添加SWAP否则会报错，2GB以上内存的vps可自行决定是否添加SWAP<br>centos7添加SWAP我参考的 <a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1722369">这篇文章</a></p>
+</blockquote>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">#先用 free -m 查看一下swap的大小</span><br><span class="line"></span><br><span class="line">#1、使用dd命令创建/home/swap这么一个分区文件。文件的大小是1024000个block，一般情况下1个block为1K，所以这里空间是1000MB</span><br><span class="line"></span><br><span class="line">dd if=/dev/zero of=/home/swap bs=1024 count=1024000</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">#2、接着再把这个分区变成swap分区</span><br><span class="line"></span><br><span class="line">/sbin/mkswap /home/swap</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">#3、再接着使用这个swap分区。使其成为有效状态</span><br><span class="line"></span><br><span class="line">/sbin/swapon /home/swap</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">#现在再用 free -m 命令查看一下内存和swap分区大小，就发现增加了512M的空间了</span><br><span class="line"></span><br><span class="line">#4、修改/etc/fstab文件，在文件末尾增加如下一行，实现开机自动挂载</span><br><span class="line">#vi /etc/fstab</span><br><span class="line"></span><br><span class="line">/home/swap swap swap defaults 0 0</span><br></pre></td></tr></table></figure>
+
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAexmFWjPOTTEZNk1N598sUk_PPqp2gACvA8AAmSdsVQsQVKNjk5i9DQE" alt="Alt Text"></p>
+<h4 id="3、安装被控服务"><a href="#3、安装被控服务" class="headerlink" title="3、安装被控服务"></a>3、安装被控服务</h4><p>进入cdnfly管理员控制台&gt;&gt;系统管理&gt;&gt;系统升级，复制节点安装命令并在节点1和节点2等CDN节点服务器执行<br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAetmFWi-j5togs6IYQ8neHtEiCbBnAACuw8AAmSdsVQGLCbOPf61RTQE" alt="Alt Text"></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">curl -fsSL https://github.com/Steady-WJ/cdnfly-kaixin/raw/main/agent.sh -o agent.sh &amp;&amp; chmod +x agent.sh &amp;&amp; ./agent.sh --master-ver v5.1.13 --master-ip ip --es-ip ip --es-pwd passwd</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">###替换--master-ip --es-ip --es-pwd 为你自己的，在cdnfly面板查看</span><br><span class="line">###例如我执行的脚本为</span><br><span class="line">curl -fsSL https://github.com/Steady-WJ/cdnfly-kaixin/raw/main/agent.sh -o agent.sh &amp;&amp; chmod +x agent.sh &amp;&amp; ./agent.sh --master-ver v5.1.13 --master-ip 167.235.134.18 --es-ip 167.235.134.18 --es-pwd OPpESBo9mF</span><br></pre></td></tr></table></figure>
+
+<p>下图即为安装成功，cdnfly被控服务会自己安装nginx等<br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAepmFWizZhZ24KgoIr8yFU04lP1QgQACug8AAmSdsVTTLnimLZBjcjQE" alt="Alt Text"></p>
+<h4 id="4、安装BBR"><a href="#4、安装BBR" class="headerlink" title="4、安装BBR"></a>4、安装BBR</h4><p>从下图就可以看出丢包对BBR的影响有多大<br>centos安装BBR我用的以下这条命令</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">wget &quot;https://github.com/cx9208/bbrplus/raw/master/ok_bbrplus_centos.sh&quot; &amp;&amp; chmod +x ok_bbrplus_centos.sh &amp;&amp; ./ok_bbrplus_centos.sh</span><br></pre></td></tr></table></figure>
+
+<p>参考：<a target="_blank" rel="noopener" href="https://aws.amazon.com/cn/blogs/china/talking-about-network-optimization-from-the-flow-control-algorithm/">从流量控制算法谈网络优化 – 从 CUBIC 到 BBRv2 算法</a><br><a target="_blank" rel="noopener" href="https://toonk.io/tcp-bbr-exploring-tcp-congestion-control/index.html">TCP BBR - Exploring TCP congestion control (toonk.io)</a><br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAelmFWieK0x1v2WlaRk1LAkNN9Q4dQACuQ8AAmSdsVTUoEW91De3TzQE" alt="Alt Text"></p>
+<h4 id="5、卸载节点"><a href="#5、卸载节点" class="headerlink" title="5、卸载节点"></a>5、卸载节点</h4><p>如果节点想换到另一台主控或者不想占用80 443 ，可以执行这条命令卸载节点</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cd /tmp/ &amp;&amp; curl -m 5 http://dl2.cdnfly.cn/cdnfly/agent_uninstall.sh -o agent_uninstall.sh || curl -m 5 http://us.centos.bz/cdnfly/agent_uninstall.sh &amp;&amp; chmod +x agent_uninstall.sh &amp;&amp; ./agent_uninstall.sh </span><br></pre></td></tr></table></figure>
+
+<h2 id="六、cdnfly控制台必要配置"><a href="#六、cdnfly控制台必要配置" class="headerlink" title="六、cdnfly控制台必要配置"></a>六、cdnfly控制台必要配置</h2><blockquote>
+<p>官方安装文档：<a target="_blank" rel="noopener" href="http://doc.cdnfly.cn/1791543">安装说明 · Cdnfly使用文档</a></p>
+</blockquote>
+<h4 id="1、添加CDN节点"><a href="#1、添加CDN节点" class="headerlink" title="1、添加CDN节点"></a>1、添加CDN节点</h4><p>即主控与被控服务建立连接，添加方法如下图<br>会提示先修改密码，修改密码在：系统管理&gt;&gt;用户管理<br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAehmFWiITI2i1ARW83c3DpJy_5tLxAACuA8AAmSdsVTUXS20BwP4fzQE" alt="Alt Text"><br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAedmFWh4SSbNoB8pCBFji5kftLA53gACtw8AAmSdsVRO2IOgbXf5LzQE" alt="Alt Text"><br>1GB内存小鸡通常会出现 <code>同步cc_filter nginx openresty</code> 以下报错，这是因为内存不够 解决办法是添加虚拟内存即可。<br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAeZmFWhj_Jd0N1ln7bCOMvPGU5AWpwACtg8AAmSdsVSalbjyMTWHmTQE" alt="Alt Text"></p>
+<h4 id="2、DNS设置"><a href="#2、DNS设置" class="headerlink" title="2、DNS设置"></a>2、DNS设置</h4><p>DNS设置可配置通过API来与第三方DNS提供商无缝对接，来生成网站的CNAME<br>目前支持aliyun，国内版dnspod，dns.com、dns.la 和cloudflare.com</p>
+<blockquote>
+<p>获取密钥具体参考官方 <a target="_blank" rel="noopener" href="http://doc.cdnfly.cn/1790340">DNS设置</a></p>
+</blockquote>
+<h4 id="3、线路分组-设置分线路解析"><a href="#3、线路分组-设置分线路解析" class="headerlink" title="3、线路分组 设置分线路解析"></a>3、线路分组 设置分线路解析</h4><blockquote>
+<p>只有 DNS服务商 支持分线路解析才可以设置分线路解析</p>
+<p>例如cloudflare这类国外DNS服务就不支持分线路解析<br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAeVmFWhMgrWJZKX1pOWPGGwl8msFlAACtQ8AAmSdsVQU9HQqsC3NqjQE" alt="Alt Text"><br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAeRmFWg9B219b1-cT-Kc4Asp1GNaYwACtA8AAmSdsVSrZ77EIxADiTQE" alt="Alt Text"><br>还可以为IP设置权重，权重越大用户访问该IP相对越多</p>
+</blockquote>
+<h4 id="4、添加套餐"><a href="#4、添加套餐" class="headerlink" title="4、添加套餐"></a>4、添加套餐</h4><ul>
+<li>名称 - 套餐名称，用户端也会显示这个</li>
+<li>描述 - 套餐的说明，也会显示到用户端的套餐购买列表</li>
+<li>分配给用户 - 输入用户的id，表示指定该套餐为该用户的专属套餐，只有这个用户能购买此套餐</li>
+<li>线路分组 - 上一步添加的线路组，或其它分组，决定网站绑定此套餐后网站配置分发到的节点，以及cname解析的IP</li>
+<li>套餐分组 - 为套餐分组，分组也会显示到用户端的套餐购买页面，方便归类购买</li>
+<li>CNAME域名 - 生成网站cname使用的域名，默认为之前dns设置中的主域名，可以输入其它的域名，但此域名必须跟主域名在同一个dns账号下。</li>
+<li>月流量 - G为单位，限制该套餐一个自然月内使用流量的上限</li>
+<li>域名数 - 该套餐允许的域名数量，域名数量包括裸域名及各级域名，<a target="_blank" rel="noopener" href="http://如www.cdnfly.cn/">如www.cdnfly.cn</a> cdnfly.cn算两域名</li>
+<li>HTTP非80,443端口数 - http可以输入非80,443的端口，此项可以限制非标端口的数量，不允许的话设置为0</li>
+<li>四层转发端口数 - 四层转发允许的端口数</li>
+<li>自定义CC规则 - 如果此项为允许，用户则可以创建自己的cc规则，并绑定到网站使用。如果为禁止，则用户只允许选择系统内置的规则</li>
+<li>排序 - 默认100，小值排在前面</li>
+<li>带宽为负值表示无限制</li>
+<li>连接数为负值表示不限制连接数<br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAeNmFWgp72ZPycb-bJEKUqrQ6HMl2QACsw8AAmSdsVQ_dLaP7rxtETQE" alt="Alt Text"></li>
+</ul>
+<h4 id="5、添加网站"><a href="#5、添加网站" class="headerlink" title="5、添加网站"></a>5、添加网站</h4><p>用管理员权限在 系统管理&gt;&gt;用户管理 创建一个用户 test<br>以 test 用户登录 然后购买免费的高级套餐，在网站管理&gt;&gt;分组管理&gt;&gt;新增分组后就可以添加网站了</p>
+<h4 id="6、节点监控介绍"><a href="#6、节点监控介绍" class="headerlink" title="6、节点监控介绍"></a>6、节点监控介绍</h4><blockquote>
+<p>此节内容于2023.4.24补充，我的云端伪装站点只可以使用http监控，tcp ping监控均无法生效，目前不知到什么原因</p>
+<p>#2023.6.17更新 此IP可以tcp监控，看来是宝塔等问题<br>#51.81.222.246 auth.cdnfly.cn monitor.cdnfly.cn<br><strong>cdnfly节点自动切换的规则：</strong><br>cdnfly的节点监控支持主节点宕机自动暂停 并删除该条DNS解析记录<br>如果设置了备用节点会用一个备用节点替换已失效的主节点 并同步DNS解析记录<br>当主节点再次恢复正常，cdnfly自动启用主节点并且取消使用备用节点，同时DNS会增加主节点DNS记录删去备用节点的解析记录<br>以上操作均为系统自动执行无需人工干预，可以选择配置SMTP发信服务，可以收到 节点失效&#x2F;节点恢复&#x2F;切换操作 等通知<br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAeJmFWgYkmIygkew-EVlocUAAVec7hAAArIPAAJknbFUZ4PzwdnYxZE0BA" alt="Alt Text"><br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAeFmFWfojz14ytWfxpi_hPYLChvcjwACsQ8AAmSdsVQkt_mdEDOSRjQE" alt="Alt Text"><br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAeBmFWfaDy7q5Bw6ePBYfEftRjYOXAACsA8AAmSdsVQAASg7OLJxe2Y0BA" alt="Alt Text"><br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAd9mFWfKBdA4yNE-Yy15u2c5jGjckwACrw8AAmSdsVQK-sNUbOrqajQE" alt="Alt Text"></p>
+</blockquote>
+<h4 id="7、单节点设置"><a href="#7、单节点设置" class="headerlink" title="7、单节点设置"></a>7、单节点设置</h4><p>可以限制节点机器的文件缓存大小(不要超过vps硬盘本身大小)<br>可以设置节点出站速度（100Mbps&#x3D;12.5MB&#x2F;s）</p>
+<blockquote>
+<p>这里的代理设置应该不是指CDN节点到用户这段可以通过代理加速<br>代理似乎也只支持http代理<br>因为我给cdnfly节点添加代理后，我在云端监控(云端伪装站点)的服务器监听到了它与代理IP进行通信<br>我猜测是：系统执行定时任务检查时，如果给CDN节点配置了代理，云端监控通过代理去访问CDN节点<br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAd5mFWd42ZXcolBOxsG7to6pqciHBAACrg8AAmSdsVTA-Bse72BOJjQE" alt="Alt Text"><br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAd1mFWdlXowpZU9K4M0BG6iMcj8vIQACrQ8AAmSdsVTxBbya2ZEtnjQE" alt="Alt Text"><br>当http代理无效或非http代理时，还会报错，此时同步等功能会失效<br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAdxmFWdQBcYkGrgQAAEMQhdsEkbiuWkAAqwPAAJknbFU9T-Idb9yawQ0BA" alt="Alt Text"><br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAdtmFWc9sneKEkE7n1jN_ZQLr0Uo4wACqg8AAmSdsVQCTsv-AlcqdDQE" alt="Alt Text"></p>
+</blockquote>
+<h4 id="8、禁用API-多用户必设置-重要重要重要！！！"><a href="#8、禁用API-多用户必设置-重要重要重要！！！" class="headerlink" title="8、禁用API(多用户必设置)(重要重要重要！！！)"></a><strong>8、禁用API(多用户必设置)(重要重要重要！！！)</strong></h4><p><strong>2023.5.21 cdnfly5.1.13存在重大漏洞，普通用户生成的API通过某些方法可以拿到管理员权限，解决方法就是禁用API，首先在 <code>cdnfly控制台</code> &gt; <code>系统管理</code> &gt; <code>系统设置</code> &gt; <code>用户相关</code> &gt; <code>限制普通用户只能从此域名登录</code> 和<code>限制管理员只能从此域名登录</code></strong><br><em><em>再依次在这两个登录域名设置 禁止 &#x2F;v1&#x2F;</em> 的所有访问，5.1.13版本的 <code>/v1</code> 路径是执行api的必要路径，封禁就可以避免被黑了</em> *<br><strong>限制cdnfly从域名登录是避免从源站ip访问到了api</strong><br><strong>限制管理员是二次防火墙，如果黑客获取了权限，但是不知道你的管理员登录地址，他就只能对普通用户更改</strong><br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAdpmFWcpA5W-iRKAjQLkOmKHZvdtWAACqQ8AAmSdsVT5dwvWs_0v8TQE" alt="Alt Text"><br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAdlmFWcXbXEagcKE_degOyGS0Bav7gACqA8AAmSdsVRi14HrDpx4_DQE" alt="Alt Text"></p>
+<h2 id="七、cdnfly控制台推荐配置"><a href="#七、cdnfly控制台推荐配置" class="headerlink" title="七、cdnfly控制台推荐配置"></a>七、cdnfly控制台推荐配置</h2><h4 id="1、设置CC防护"><a href="#1、设置CC防护" class="headerlink" title="1、设置CC防护"></a>1、设置CC防护</h4><p>这个根据自己需要设置就好了，还可以自定义CC规则<br>比如设置单IP 10s内最大访问 329.tanglu.cf 资源数为100，单个资源最大次数为20</p>
+<blockquote>
+<p>这个防一般的单IP CC攻击很有效，推荐设置<br>需要自己CC测压 可以参考 <a target="_blank" rel="noopener" href="https://blog.tanglu.me/stop-cc">这篇记录</a><br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAdhmFWcHl-9eENXis3Y98-NeodyldgACpw8AAmSdsVSCqdJ6rpV90jQE" alt="Alt Text"><br>一些发卡站避免被机器人检查可以设置访问该域名需要点击验证<br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAddmFWb2yTbpAb4cXE-HWcFcvGadpgACpg8AAmSdsVSzi2sPuhwt8DQE" alt="Alt Text"></p>
+</blockquote>
+<h4 id="2、设置CDN缓存文件类型"><a href="#2、设置CDN缓存文件类型" class="headerlink" title="2、设置CDN缓存文件类型"></a>2、设置CDN缓存文件类型</h4><p>这个也是根据自己网站的资源类型，以下是我博客的设置<br>缓存设置建议参考官方文档：<a target="_blank" rel="noopener" href="http://doc.cdnfly.cn/1794807">缓存配置 · Cdnfly使用文档</a><br>默认为不缓存任何文件<br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAdZmFWbmXiUkxGFt9kHJheFkDm2CmQACpQ8AAmSdsVQ5iHjmGT5A1TQE" alt="Alt Text"></p>
+<h4 id="3、设置CDN节点服务器缓存大小和最大带宽"><a href="#3、设置CDN节点服务器缓存大小和最大带宽" class="headerlink" title="3、设置CDN节点服务器缓存大小和最大带宽"></a>3、设置CDN节点服务器缓存大小和最大带宽</h4><p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAdVmFWbVzRKR_Id822D7oHsMcyKMPwACpA8AAmSdsVQ6IrzYsd3hwjQE" alt="Alt Text"></p>
+<h4 id="4、申请证书"><a href="#4、申请证书" class="headerlink" title="4、申请证书"></a>4、申请证书</h4><p>cdnfly的证书是自动续签的<br>cdnfly申请证书很简单有两种方法<br>一种是一键申请<br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAdRmFWbARpduHCZEnfqJ06w5aXO01gACow8AAmSdsVRsgcdaND091zQE" alt="Alt Text"><br>一种是在 <code>网站管理</code> &gt; <code>证书管理</code> &gt; <code>我的证书</code> 中申请证书<br>当然也可以上传自己的证书<br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAdNmFWaeOQS7NV_8bZxROGy01M-cNgACog8AAmSdsVTPOzgCg0ulUjQE" alt="Alt Text"><br>如果没有申请成功，可以在 <code>我的网站</code> &gt; <code>高级配置</code> 中开启 <code>/.well-known/acme-challenge/请求回源</code><br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAdJmFWaMu30O1c36r0kUvooO-d_i8AACoQ8AAmSdsVT7DGbo9Al4cDQE" alt="Alt Text"></p>
+<h2 id="八、cdnfly控制台其他配置"><a href="#八、cdnfly控制台其他配置" class="headerlink" title="八、cdnfly控制台其他配置"></a>八、cdnfly控制台其他配置</h2><h4 id="1、短信-邮箱提示"><a href="#1、短信-邮箱提示" class="headerlink" title="1、短信&#x2F;邮箱提示"></a>1、短信&#x2F;邮箱提示</h4><p>这里就是设置SMTP服务，QQ&#x2F;gmail等都支持SMT发信，可以参考篇记录获取你QQ&#x2F;gmail的SMTP专用密码：<a target="_blank" rel="noopener" href="https://blog.tanglu.me/webmail/#%E4%B8%89%E3%80%81%E9%80%9A%E8%BF%87%E6%9C%8D%E5%8A%A1%E5%99%A8%E8%B4%A6%E5%8F%B7%E5%AF%86%E7%A0%81%E7%99%BB%E5%BD%95">获取QQ&#x2F;gmail等邮箱的SMTP账号密码</a><br>也可以用自己的域名邮箱发件，我在这里演示过使用scaleway的邮件推送服务：<a target="_blank" rel="noopener" href="https://blog.tanglu.me/send-and-receive-mails/#%E4%B8%89%E3%80%81%E9%85%8D%E7%BD%AE%E5%8F%91%E4%BB%B6%E6%9C%8D%E5%8A%A1%E5%99%A8">邮件推送</a><br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAdFmFWZ9gywmPGnP3oyCWvhF7iLF_AACoA8AAmSdsVQ5HKQNM_TVZTQE" alt="Alt Text"><br>主控必须开放相应端口(25&#x2F;465)才可以连接发件服务器从而正常发件，如果确认cdnfly的SMTP配置没问题但是cdnfly显示无法连接，可以检查主控服务器相应端口是否开放</p>
+<h4 id="2、对接支付"><a href="#2、对接支付" class="headerlink" title="2、对接支付"></a>2、对接支付</h4><p>需要支付功能请参考 <a target="_blank" rel="noopener" href="http://doc.cdnfly.cn/1827348">充值设置</a></p>
+<h4 id="3、转发"><a href="#3、转发" class="headerlink" title="3、转发"></a>3、转发</h4><p>转发容易封禁端口，不建议用CDN服务器做转发</p>
+<h4 id="4、面板通过域名访问"><a href="#4、面板通过域名访问" class="headerlink" title="4、面板通过域名访问"></a>4、面板通过域名访问</h4><p>直接套cloudflare，或者套其它CDN，也可以用其他机器反代 但感觉没必要<br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAdBmFWZs5HZe_wIcvLTQkpCYpc9n2AACnw8AAmSdsVT_fKjB5kLizTQE" alt="Alt Text"></p>
+<h4 id="5、节点监控和宕机自动切换"><a href="#5、节点监控和宕机自动切换" class="headerlink" title="5、节点监控和宕机自动切换"></a>5、节点监控和宕机自动切换</h4><p>需要配置SMTP节点超时会提示和开启宕机自动切换自动切换</p>
+<h4 id="6、cdnfly设置反代"><a href="#6、cdnfly设置反代" class="headerlink" title="6、cdnfly设置反代"></a>6、cdnfly设置反代</h4><blockquote>
+<p>这个功能就是指定回源host，实现反代的功能<br>比如想给R2套第三方CDN就需要在第三方CDN配置回源host指向R2的绑定域名<br>举个指定CDN回源host，实现反代的功能的例子：<br>源站 blog.tanglu.me，现在用 blog.tang.lu 反代源站 ，如果直接给blog.tang.lu配置普通CDN CDN设置回源站点是 blog.tanglu.me，CDN解析出blog.tanglu.me的IP 2.2.2.2 然后发送http请求为 ‘’域名blog.tang.lu IP2.2.2.2’,因为源站点没有配置blog.tang.lu这个站点 访问就会报错。但是CDN设置指定回源HOST为blog.tanglu.me,CDN设置回源请求就是 ‘IP是2.2.2.2 回源域名是 blog.tanglu.me’,这样就可以成功访问了<br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAc9mFWZVOWVVXguz4h4-0bh1lbnL4gACng8AAmSdsVQTgUcdtK4UnTQE" alt="Alt Text"></p>
+</blockquote>
+<h2 id="九、备份和恢复"><a href="#九、备份和恢复" class="headerlink" title="九、备份和恢复"></a>九、备份和恢复</h2><p>cdnfly提供了非常简单的备份和恢复功能</p>
+<h4 id="1、备份"><a href="#1、备份" class="headerlink" title="1、备份"></a>1、备份</h4><p>主控默认会每两小时备份数据库，备份默认保留7天（可以自行修改保留天数），备份文件在 <code>/data/backup/cdn/</code><br>除了备份数据库，还需要备份 <code>/opt/cdnfly/master/conf</code> 文件夹下的 <code>config.py</code> 文件(其实记住AES_KEY和LOG_PWD就行了)<br>恢复时只需要用到这两个文件，为了防止主控失联，建议每天上传备份<br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAc5mFWY7_t1FF9U_--D0mSBn83UnjgACnA8AAmSdsVRgx9Xe0lEp_DQE" alt="Alt Text"><br>每日自动上传备份</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">#我这里只是记录一下我的操作 可能不适合你</span><br><span class="line">crontab -e</span><br><span class="line"></span><br><span class="line">0 1,13 * * * rclone copy /data/backup/cdn/ r2:tanglu/cdnfly/backup/vps1</span><br></pre></td></tr></table></figure>
+
+<h4 id="2、恢复"><a href="#2、恢复" class="headerlink" title="2、恢复"></a>2、恢复</h4><p>此操作参考<a target="_blank" rel="noopener" href="http://doc.cdnfly.cn/FAQ.html#%E6%97%A7%E4%B8%BB%E6%8E%A7%E6%97%A0%E6%B3%95%E6%89%93%E5%BC%80%E7%9A%84%E6%83%85%E5%86%B5">cdnfly官网</a>，亲测有效<br><strong>旧主控：</strong><br>将旧主控 <code>/data/backup/cdn/</code> 下的某个时间的数据库备份包 如 <code>mysql-20230724-010931.sql.gz</code> 下载到本地，重命名为 <code>cdn.sql.gz</code><br>将旧主控的 <code>/opt/cdnfly/master/conf/config.py</code> 文件也下载下来<br>关闭旧主控，这里记得关闭，如果不关闭的话新旧主控同时运行会出现后台任务只创建但不执行，导致新主控无法正常运行<br><strong>新主控：</strong><br>首先正常执行安装主控命令：<br>如果有需要自授权请先搭建云端 修改hosts</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">curl -fsSL https://github.com/Steady-WJ/cdnfly-kaixin/raw/main/master.sh -o master.sh &amp;&amp; chmod +x master.sh &amp;&amp; ./master.sh --es-dir /home/es</span><br></pre></td></tr></table></figure>
+
+<p>然后ssh连接新主控，恢复备份和config. py，初始化es</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">#进入主控root目录</span><br><span class="line">cd /root</span><br><span class="line"></span><br><span class="line">#将上节备份的数据库文件 cdn.sql.gz 上传到root目录</span><br><span class="line"></span><br><span class="line">#在root目录下执行以下两条命令 恢复数据库</span><br><span class="line">curl http://us.centos.bz/cdnfly/restore_master.sh -o restore_master.sh &amp;&amp; chmod +x restore_master.sh</span><br><span class="line"></span><br><span class="line">./restore_master.sh</span><br><span class="line"></span><br><span class="line">#将上节备份的旧主控 /opt/cdnfly/master/conf/config.py 上传新主控相同位置，实现替换掉新主控的config.py文件</span><br><span class="line"></span><br><span class="line">#依次执行以下四条命令初始化elasticsearch</span><br><span class="line">cd /tmp</span><br><span class="line"></span><br><span class="line">wget us.centos.bz/cdnfly/int_es.sh -O int_es.sh &amp;&amp; chmod +x int_es.sh</span><br><span class="line"></span><br><span class="line">./int_es.sh /home/es</span><br><span class="line"></span><br><span class="line">supervisorctl -c /opt/cdnfly/master/conf/supervisord.conf restart all</span><br><span class="line"></span><br><span class="line">#至此主控设置完成，通过旧主控的账号密码进入可以发现 节点 用户 网站 日志 dns等都恢复了</span><br><span class="line">#接下来只需要对旧节点更换IP即可</span><br></pre></td></tr></table></figure>
+
+<p><strong>旧节点</strong> ：<br>需要将旧节点的旧主控IP替换为新主控的IP</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">#依次在ssh登录每个节点并执行下面命令即可</span><br><span class="line">#将 your_new_ip 替换为你自己的新主控IP</span><br><span class="line"></span><br><span class="line">wget -qO change_ip.sh https://file.1323123.xyz/cdnfly/backup/shell/change_ip.sh &amp;&amp; chmod +x change_ip.sh &amp;&amp; bash change_ip.sh your_new_ip</span><br></pre></td></tr></table></figure>
+
+<p><strong>新节点：</strong><br>新节点安装方式和旧节点安装方式一样，只需要将旧主控IP修改为新主控IP 密码修改为旧主控密码即可<br>旧主控密码忘记了可以在 <code>/opt/cdnfly/master/conf/config.py</code> 可以找到</p>
+<h2 id="十、杂谈"><a href="#十、杂谈" class="headerlink" title="十、杂谈"></a>十、杂谈</h2><p>① 你也可以像我博客一样将境外流量接入到cloudflare加速，国内走优化节点，具体教程可以参考 <a target="_blank" rel="noopener" href="https://blog.tanglu.me/cloudflare-configure/#Custom-Hostnames">cloudflare配置详解</a><br>② <a target="_blank" rel="noopener" href="https://blog.tanglu.me/stop-cc">CC测压</a> 注意不要用源站机器去攻击，可能cdnfly为了回源请求成功 给源站IP加了白名单，我之前遇到这个问题纠结好久还以为是cdnfly规则有问题，最后才知道小丑是我自己…<br>③ 如果源站开启了防御记得将CDN加入白名单<br>④ 主控迁移可以参考官方 <a target="_blank" rel="noopener" href="http://doc.cdnfly.cn/1790368">FAQ</a><br>⑤ cdnfly支持添加泛域名，只要待添加域名的DNS服务商支持泛域名解析即可<br>⑥  <strong>cdnfly统计流量似乎只计算’CDN节点到用户(出站)’这个过程消耗的流量</strong> ，用户到CDN节点(入站)、CDN节点到源服务器(出站)、源服务器到CDN节点(入站)均不计入套餐流量。如果服务器为双向计费请注意设置价格<br>以下是我的测试记录：<br>我先通过套CDN在客户端跑测速(发包收包流量都大)，测得CDN入站流量 1362MB，出站总流量 371MB，CDN套餐显示流量消耗 233MB<br>我又通过客户端批量发包(发包流量小 收包流量大)，测得CDN入站流量 269MB，出站总流量 302MB，CDN套餐显示流量消耗 258MB<br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAc1mFWYsOEbvztlU5U2pA3OFJh2cYwACmw8AAmSdsVRAn_XzewEubjQE" alt="Alt Text"><br>⑦ 斯巴达等服务商提供的centos7系统无法安装，需要dd（新的斯巴达centos7镜像已支持）<br>服务器dd centos7的方法可以看我的这篇记录：<a target="_blank" rel="noopener" href="https://blog.tanglu.me/dd/">常见vps dd windows合集</a><br>⑧ 中文域名直接添加会报错，需要在 <a target="_blank" rel="noopener" href="https://www.punycoder.com/">punycoder.com</a> 将中文字符转换成 xn–sfj3b** 格式添加<br>⑨ 主控安装好后可以装宝塔吗？主控装完后会占用80 443端口，单纯装个宝塔是只占用8000端口，宝塔再装nginx会占用80端口，很明显你80端口需要给主控，所以你可以改一下宝塔nginx的端口 比如http改为8080 https改为4433，不建议新手尝试<br>⑩<code>Error： 添加节点失败:原因没有权限</code> <code>错误号： node-23</code> 应该是密码错了，请前往主控的 <code>系统管理</code> &gt; <code>系统升级</code> 中查看密码<br>11、报错 <code>添加节点失败:原因没有权限 node-23</code> ,是因为节点密码没有换成自己的，去主控的系统升级查看</p>
+</article><div class="post-copyright"><div class="copyright-cc-box"><i class="anzhiyufont anzhiyu-icon-copyright"></i></div><div class="post-copyright__author_box"><a class="post-copyright__author_img" href="/" title="头像"><img class="post-copyright__author_img_back" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/CAACAgUAAx0Ea55INgACA8dmxVZRdYGpsxjqqiFZVAOEMqlgLgACSxAAAiKFKFYF4Wxv3uRCjzUE" title="头像" alt="头像"><img class="post-copyright__author_img_front" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/CAACAgUAAx0Ea55INgACA8dmxVZRdYGpsxjqqiFZVAOEMqlgLgACSxAAAiKFKFYF4Wxv3uRCjzUE" title="头像" alt="头像"></a><div class="post-copyright__author_name">First</div><div class="post-copyright__author_desc">文字记录生活</div></div><div class="post-copyright__post__info"><a class="post-copyright__original" title="该文章为原创文章，注意版权协议" href="http://example.com/2023/08/07/%E4%BD%BF%E7%94%A8cdnfly%E8%87%AA%E5%BB%BAcdn%E5%B9%B6%E9%85%8D%E7%BD%AEcc%E9%98%B2%E6%8A%A4/">原创</a><a class="post-copyright-title"><span onclick="rm.copyPageUrl('http://example.com/2023/08/07/%E4%BD%BF%E7%94%A8cdnfly%E8%87%AA%E5%BB%BAcdn%E5%B9%B6%E9%85%8D%E7%BD%AEcc%E9%98%B2%E6%8A%A4/')">使用cdnfly自建CDN并配置CC防护</span></a></div><div class="post-tools" id="post-tools"><div class="post-tools-left"><div class="rewardLeftButton"></div><div class="shareRight"><div class="share-link mobile"><div class="share-qrcode"><div class="share-button" title="使用手机访问这篇文章"><i class="anzhiyufont anzhiyu-icon-qrcode"></i></div><div class="share-main"><div class="share-main-all"><div id="qrcode" title="http://example.com/2023/08/07/%E4%BD%BF%E7%94%A8cdnfly%E8%87%AA%E5%BB%BAcdn%E5%B9%B6%E9%85%8D%E7%BD%AEcc%E9%98%B2%E6%8A%A4/"></div><div class="reward-dec">使用手机访问这篇文章</div></div></div></div></div><div class="share-link weibo"><a class="share-button" target="_blank" href="https://service.weibo.com/share/share.php?title=使用cdnfly自建CDN并配置CC防护&amp;url=http://example.com/2023/08/07/%E4%BD%BF%E7%94%A8cdnfly%E8%87%AA%E5%BB%BAcdn%E5%B9%B6%E9%85%8D%E7%BD%AEcc%E9%98%B2%E6%8A%A4/&amp;pic=https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACA3VmuEYalzG0lSVQIzLBJ4Lba_MZJAACPxIAAg4EwFVYWETVPO9D1DUE" rel="external nofollow noreferrer noopener"><i class="anzhiyufont anzhiyu-icon-weibo"></i></a></div><script>function copyCurrentPageUrl() {
+  var currentPageUrl = window.location.href;
+  var input = document.createElement("input");
+  input.setAttribute("value", currentPageUrl);
+  document.body.appendChild(input);
+  input.select();
+  input.setSelectionRange(0, 99999);
+  document.execCommand("copy");
+  document.body.removeChild(input);
+}</script><div class="share-link copyurl"><div class="share-button" id="post-share-url" title="复制链接" onclick="copyCurrentPageUrl()"><i class="anzhiyufont anzhiyu-icon-link"></i></div></div></div></div></div><div class="post-copyright__notice"><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://example.com" target="_blank">文一刀</a>！</span></div></div><div class="post-tools-right"><div class="tag_share"><div class="post-meta__box"><div class="post-meta__box__tag-list"></div></div></div><div class="post_share"><div class="social-share" data-image="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACA8Nmvcdj7dnzF_QRJ_IVhZ0enL6IHwACzQ4AAv8f6VUsYfLidNhxITUE" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.cbd.int/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"/><script src="https://cdn.cbd.int/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer="defer"></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/08/03/alpine%E7%B3%BB%E7%BB%9F%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/"><img class="prev-cover" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACA3ZmuEZwG8J_IMgjW6SnU2gWi0DGIQACQhIAAg4EwFVbBMmr5v_hqzUE" onerror="onerror=null;src='https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">alpine系统常用命令</div></div></a></div><div class="next-post pull-right"><a href="/2024/01/13/%E7%88%AC%E5%8F%96%E5%88%AB%E4%BA%BA%E7%BD%91%E7%AB%99%E7%9A%84%E4%BC%98%E9%80%89%E5%8F%8D%E4%BB%A3ip/"><img class="next-cover" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACA3xmuHmjnsWJgBQskQf31WyPIchcbAACjBQAAg4EyFUKfARKVObvCDUE" onerror="onerror=null;src='https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">爬取别人网站的优选反代IP</div></div></a></div></nav><hr/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="anzhiyufont anzhiyu-icon-comments"></i><span> 评论</span></div><div class="comment-randomInfo"><a onclick="anzhiyu.addRandomCommentInfo()" href="javascript:void(0)" style="display: none">匿名评论</a><a href="/privacy" style="margin-left: 4px">隐私政策</a></div></div><div class="comment-wrap"><div><div id="waline-wrap"></div></div></div></div><div class="comment-barrage"></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="card-content"><div class="author-info__sayhi" id="author-info__sayhi" onclick="anzhiyu.changeSayHelloText()"></div><div class="author-info-avatar"><img class="avatar-img" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/CAACAgUAAx0Ea55INgACA8dmxVZRdYGpsxjqqiFZVAOEMqlgLgACSxAAAiKFKFYF4Wxv3uRCjzUE" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/><div class="author-status"><img class="g-status" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/CAACAgUAAx0Ea55INgACA8hmxVfT1e32-auU4nAu3JTyfUGCKAACTxAAAiKFKFafVBpqvcYLAzUE" alt="status"/></div></div><div class="author-info__description"><div style="line-height:1.38;margin:0.6rem 0;text-align:justify;color:rgba(255, 255, 255, 0.8);">这有关于<b style="color:#fff">产品、设计、开发</b>相关的问题和看法，还有<b style="color:#fff">文章翻译</b>和<b style="color:#fff">分享</b>。</div><div style="line-height:1.38;margin:0.6rem 0;text-align:justify;color:rgba(255, 255, 255, 0.8);">相信你可以在这里找到对你有用的<b style="color:#fff">知识</b>和<b style="color:#fff">教程</b>。</div></div><div class="author-info__bottom-group"><a class="author-info__bottom-group-left" href="/about"><h1 class="author-info__name">First</h1><div class="author-info__desc">文字记录生活</div></a><div class="card-info-social-icons is-center"><a class="social-icon faa-parent animated-hover" href="https://t.me/OOIO_ibot" target="_blank" title="Telegram"><i class="anzhiyufont anzhiyu-icon-paper-plane"></i></a></div></div></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="anzhiyufont anzhiyu-icon-bullhorn anzhiyu-shake"></i><span>公告</span></div><div class="announcement_content">欢迎来看我的博客鸭~</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="anzhiyufont anzhiyu-icon-bars"></i><span>文章目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%89%8D%E8%A8%80"><span class="toc-text">一、前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%87%86%E5%A4%87"><span class="toc-text">二、准备</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81cdnfly%E8%87%AA%E5%BB%BA%E4%BA%91%E7%AB%AF"><span class="toc-text">三、cdnfly自建云端</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E4%B8%BB%E6%8E%A7%E6%9C%8D%E5%8A%A1%E5%99%A8%E8%AE%BE%E7%BD%AE"><span class="toc-text">四、主控服务器设置</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81%E9%A6%96%E5%85%88%E6%9B%B4%E6%96%B0centos7%E6%BA%90"><span class="toc-text">1、首先更新centos7源</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E4%BF%AE%E6%94%B9%E4%B8%BB%E6%8E%A7vps%E7%9A%84hosts%E6%96%87%E4%BB%B6"><span class="toc-text">2、修改主控vps的hosts文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E3%80%81%E6%A3%80%E6%9F%A5hosts%E6%98%AF%E5%90%A6%E7%94%9F%E6%95%88"><span class="toc-text">3、检查hosts是否生效</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4%E3%80%81%E5%AE%89%E8%A3%85cdnfly%E6%8E%A7%E5%88%B6%E9%9D%A2%E6%9D%BF"><span class="toc-text">4、安装cdnfly控制面板</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81CDN%E8%8A%82%E7%82%B9%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%85%8D%E7%BD%AE"><span class="toc-text">五、CDN节点服务器配置</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81%E6%9B%B4%E6%96%B0centos7%E7%9A%84%E6%BA%90"><span class="toc-text">1、更新centos7的源</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E6%B7%BB%E5%8A%A0SWAP%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98"><span class="toc-text">2、添加SWAP虚拟内存</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E3%80%81%E5%AE%89%E8%A3%85%E8%A2%AB%E6%8E%A7%E6%9C%8D%E5%8A%A1"><span class="toc-text">3、安装被控服务</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4%E3%80%81%E5%AE%89%E8%A3%85BBR"><span class="toc-text">4、安装BBR</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5%E3%80%81%E5%8D%B8%E8%BD%BD%E8%8A%82%E7%82%B9"><span class="toc-text">5、卸载节点</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81cdnfly%E6%8E%A7%E5%88%B6%E5%8F%B0%E5%BF%85%E8%A6%81%E9%85%8D%E7%BD%AE"><span class="toc-text">六、cdnfly控制台必要配置</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81%E6%B7%BB%E5%8A%A0CDN%E8%8A%82%E7%82%B9"><span class="toc-text">1、添加CDN节点</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81DNS%E8%AE%BE%E7%BD%AE"><span class="toc-text">2、DNS设置</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E3%80%81%E7%BA%BF%E8%B7%AF%E5%88%86%E7%BB%84-%E8%AE%BE%E7%BD%AE%E5%88%86%E7%BA%BF%E8%B7%AF%E8%A7%A3%E6%9E%90"><span class="toc-text">3、线路分组 设置分线路解析</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4%E3%80%81%E6%B7%BB%E5%8A%A0%E5%A5%97%E9%A4%90"><span class="toc-text">4、添加套餐</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5%E3%80%81%E6%B7%BB%E5%8A%A0%E7%BD%91%E7%AB%99"><span class="toc-text">5、添加网站</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#6%E3%80%81%E8%8A%82%E7%82%B9%E7%9B%91%E6%8E%A7%E4%BB%8B%E7%BB%8D"><span class="toc-text">6、节点监控介绍</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#7%E3%80%81%E5%8D%95%E8%8A%82%E7%82%B9%E8%AE%BE%E7%BD%AE"><span class="toc-text">7、单节点设置</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#8%E3%80%81%E7%A6%81%E7%94%A8API-%E5%A4%9A%E7%94%A8%E6%88%B7%E5%BF%85%E8%AE%BE%E7%BD%AE-%E9%87%8D%E8%A6%81%E9%87%8D%E8%A6%81%E9%87%8D%E8%A6%81%EF%BC%81%EF%BC%81%EF%BC%81"><span class="toc-text">8、禁用API(多用户必设置)(重要重要重要！！！)</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81cdnfly%E6%8E%A7%E5%88%B6%E5%8F%B0%E6%8E%A8%E8%8D%90%E9%85%8D%E7%BD%AE"><span class="toc-text">七、cdnfly控制台推荐配置</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81%E8%AE%BE%E7%BD%AECC%E9%98%B2%E6%8A%A4"><span class="toc-text">1、设置CC防护</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E8%AE%BE%E7%BD%AECDN%E7%BC%93%E5%AD%98%E6%96%87%E4%BB%B6%E7%B1%BB%E5%9E%8B"><span class="toc-text">2、设置CDN缓存文件类型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E3%80%81%E8%AE%BE%E7%BD%AECDN%E8%8A%82%E7%82%B9%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%BC%93%E5%AD%98%E5%A4%A7%E5%B0%8F%E5%92%8C%E6%9C%80%E5%A4%A7%E5%B8%A6%E5%AE%BD"><span class="toc-text">3、设置CDN节点服务器缓存大小和最大带宽</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4%E3%80%81%E7%94%B3%E8%AF%B7%E8%AF%81%E4%B9%A6"><span class="toc-text">4、申请证书</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81cdnfly%E6%8E%A7%E5%88%B6%E5%8F%B0%E5%85%B6%E4%BB%96%E9%85%8D%E7%BD%AE"><span class="toc-text">八、cdnfly控制台其他配置</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81%E7%9F%AD%E4%BF%A1-%E9%82%AE%E7%AE%B1%E6%8F%90%E7%A4%BA"><span class="toc-text">1、短信&#x2F;邮箱提示</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E5%AF%B9%E6%8E%A5%E6%94%AF%E4%BB%98"><span class="toc-text">2、对接支付</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E3%80%81%E8%BD%AC%E5%8F%91"><span class="toc-text">3、转发</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4%E3%80%81%E9%9D%A2%E6%9D%BF%E9%80%9A%E8%BF%87%E5%9F%9F%E5%90%8D%E8%AE%BF%E9%97%AE"><span class="toc-text">4、面板通过域名访问</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5%E3%80%81%E8%8A%82%E7%82%B9%E7%9B%91%E6%8E%A7%E5%92%8C%E5%AE%95%E6%9C%BA%E8%87%AA%E5%8A%A8%E5%88%87%E6%8D%A2"><span class="toc-text">5、节点监控和宕机自动切换</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#6%E3%80%81cdnfly%E8%AE%BE%E7%BD%AE%E5%8F%8D%E4%BB%A3"><span class="toc-text">6、cdnfly设置反代</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E5%A4%87%E4%BB%BD%E5%92%8C%E6%81%A2%E5%A4%8D"><span class="toc-text">九、备份和恢复</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81%E5%A4%87%E4%BB%BD"><span class="toc-text">1、备份</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E6%81%A2%E5%A4%8D"><span class="toc-text">2、恢复</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E3%80%81%E6%9D%82%E8%B0%88"><span class="toc-text">十、杂谈</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="anzhiyufont anzhiyu-icon-history"></i><span>最近发布</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2024/08/20/%E9%AB%98%E5%BF%97%E5%87%AF%E5%8D%8A%E5%B2%9B%E7%94%B5%E8%A7%86%E5%8F%B0%E9%87%87%E8%AE%BF%E7%B2%BE%E5%8D%8E/" title="高志凯半岛电视台采访精华"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACA8Nmvcdj7dnzF_QRJ_IVhZ0enL6IHwACzQ4AAv8f6VUsYfLidNhxITUE" onerror="this.onerror=null;this.src='https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE'" alt="高志凯半岛电视台采访精华"/></a><div class="content"><a class="title" href="/2024/08/20/%E9%AB%98%E5%BF%97%E5%87%AF%E5%8D%8A%E5%B2%9B%E7%94%B5%E8%A7%86%E5%8F%B0%E9%87%87%E8%AE%BF%E7%B2%BE%E5%8D%8E/" title="高志凯半岛电视台采访精华">高志凯半岛电视台采访精华</a><time datetime="2024-08-20T19:14:54.514Z" title="发表于 2024-08-21 03:14:54">2024-08-21</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/08/10/Hexo%E6%90%AD%E5%BB%BA/" title="Hexo搭建"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACA2VmuDLx4I4_cRLNkGlNv6PZ7ueJpQACJRIAAg4EwFUDhd4zH0umqjUE" onerror="this.onerror=null;this.src='https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE'" alt="Hexo搭建"/></a><div class="content"><a class="title" href="/2024/08/10/Hexo%E6%90%AD%E5%BB%BA/" title="Hexo搭建">Hexo搭建</a><time datetime="2024-08-10T00:29:31.096Z" title="发表于 2024-08-10 08:29:31">2024-08-10</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/06/19/verilog%E4%BA%A4%E9%80%9A%E7%81%AF%E5%AD%98%E6%A1%A3/" title="Verilog交通灯存档"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACA3lmuHk9vBGJzdYFRNZDa6LKLtNzlAAChxQAAg4EyFU5cZmje2TofTUE" onerror="this.onerror=null;this.src='https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE'" alt="Verilog交通灯存档"/></a><div class="content"><a class="title" href="/2024/06/19/verilog%E4%BA%A4%E9%80%9A%E7%81%AF%E5%AD%98%E6%A1%A3/" title="Verilog交通灯存档">Verilog交通灯存档</a><time datetime="2024-06-19T08:38:00.000Z" title="发表于 2024-06-19 16:38:00">2024-06-19</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/06/19/quartus-ii-131%E5%8F%8Amodelsim%E4%B8%8Emodelsim-altera%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/" title="Quartus II 13.1及modelsim与modelsim-altera安装教程"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACA2RmuDFwMoarXRnVOzkIocVSLfvQxwACIRIAAg4EwFWW78emVxAjsDUE" onerror="this.onerror=null;this.src='https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE'" alt="Quartus II 13.1及modelsim与modelsim-altera安装教程"/></a><div class="content"><a class="title" href="/2024/06/19/quartus-ii-131%E5%8F%8Amodelsim%E4%B8%8Emodelsim-altera%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/" title="Quartus II 13.1及modelsim与modelsim-altera安装教程">Quartus II 13.1及modelsim与modelsim-altera安装教程</a><time datetime="2024-06-19T08:26:00.000Z" title="发表于 2024-06-19 16:26:00">2024-06-19</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/05/07/silvaco2020%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/" title="Silvaco2020安装教程"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACA3pmuHluaNUAAZIjOPhO27R7Pz8-BVQAAokUAAIOBMhVKGs4KffkNRY1BA" onerror="this.onerror=null;this.src='https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE'" alt="Silvaco2020安装教程"/></a><div class="content"><a class="title" href="/2024/05/07/silvaco2020%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B/" title="Silvaco2020安装教程">Silvaco2020安装教程</a><time datetime="2024-05-07T20:38:00.000Z" title="发表于 2024-05-08 04:38:00">2024-05-08</time></div></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div id="footer_deal"><a class="deal_link" href="/mail@xuei.ru" title="email"><i class="anzhiyufont anzhiyu-icon-envelope"></i></a><a class="deal_link" href="/atom.xml" title="RSS"><i class="anzhiyufont anzhiyu-icon-rss"></i></a><img class="footer_mini_logo" title="返回顶部" alt="返回顶部" onclick="anzhiyu.scrollToDest(0, 500)" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/CAACAgUAAx0Ea55INgACA8dmxVZRdYGpsxjqqiFZVAOEMqlgLgACSxAAAiKFKFYF4Wxv3uRCjzUE" size="50px"/><a class="deal_link" target="_blank" rel="noopener" href="https://github.com/jiayihello" title="Github"><i class="anzhiyufont anzhiyu-icon-github"></i></a><a class="deal_link" href="/copyright" title="CC"><i class="anzhiyufont anzhiyu-icon-copyright-line"></i></a></div><div id="anzhiyu-footer"><div class="footer-group"><div class="footer-title">导航</div><div class="footer-links"><a class="footer-item" title="即刻短文" href="/essay/">即刻短文</a><a class="footer-item" title="友链文章" href="/fcircle/">友链文章</a><a class="footer-item" title="留言板" href="/comments/">留言板</a></div></div><div class="footer-group"><div class="footer-title">协议</div><div class="footer-links"><a class="footer-item" title="隐私协议" href="/privacy/">隐私协议</a><a class="footer-item" title="Cookies" href="/cookies/">Cookies</a><a class="footer-item" title="版权协议" href="/copyright/">版权协议</a></div></div><div class="footer-group"><div class="footer-title-group"><div class="footer-title">友链</div><a class="random-friends-btn" id="footer-random-friends-btn" href="javascript:addFriendLinksInFooter();" title="换一批友情链接"><i class="anzhiyufont anzhiyu-icon-arrow-rotate-right"></i></a></div><div class="footer-links" id="friend-links-in-footer"></div></div></div><p id="ghbdages"><a class="github-badge" target="_blank" href="https://hexo.io/" style="margin-inline:5px" data-title="博客框架为Hexo_v5.4.0" title="博客框架为Hexo_v5.4.0"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://npm.elemecdn.com/anzhiyu-blog@2.1.5/img/badge/Frame-Hexo.svg" alt="博客框架为Hexo_v5.4.0"/></a><a class="github-badge" target="_blank" href="https://blog.anheyu.com/" style="margin-inline:5px" data-title="本站使用AnZhiYu主题" title="本站使用AnZhiYu主题"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://npm.elemecdn.com/anzhiyu-theme-static@1.0.9/img/Theme-AnZhiYu-2E67D3.svg" alt="本站使用AnZhiYu主题"/></a><a class="github-badge" target="_blank" href="https://www.cloudflare.com/" style="margin-inline:5px" data-title="本站使用Cloudflare为静态资源提供CDN加速" title="本站使用Cloudflare为静态资源提供CDN加速"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://img.shields.io/badge/%E2%98%81%EF%B8%8FCDN-Cloudflare-f4822f" alt="本站使用Cloudflare为静态资源提供CDN加速"/></a><a class="github-badge" target="_blank" href="https://github.com/" style="margin-inline:5px" data-title="本站项目由Github托管" title="本站项目由Github托管"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://npm.elemecdn.com/anzhiyu-blog@2.1.5/img/badge/Source-Github.svg" alt="本站项目由Github托管"/></a><a class="github-badge" target="_blank" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" style="margin-inline:5px" data-title="本站采用知识共享署名-非商业性使用-相同方式共享4.0国际许可协议进行许可" title="本站采用知识共享署名-非商业性使用-相同方式共享4.0国际许可协议进行许可"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://npm.elemecdn.com/anzhiyu-blog@2.2.0/img/badge/Copyright-BY-NC-SA.svg" alt="本站采用知识共享署名-非商业性使用-相同方式共享4.0国际许可协议进行许可"/></a></p></div><div id="footer-bar"><div class="footer-bar-links"><div class="footer-bar-left"><div id="footer-bar-tips"><div class="copyright">&copy;2024 By <a class="footer-bar-link" href="/" title="First" target="_blank">First</a></div></div><div id="footer-type-tips"></div><div class="js-pjax"><script>function subtitleType () {
+  fetch('https://v1.hitokoto.cn')
+    .then(response => response.json())
+    .then(data => {
+      if (true) {
+        const from = '出自 ' + data.from
+        const sub = []
+        sub.unshift(data.hitokoto, from)
+        window.typed = new Typed('#footer-type-tips', {
+          strings: sub,
+          startDelay: 300,
+          typeSpeed: 150,
+          loop: true,
+          backSpeed: 50,
+        })
+      } else {
+        document.getElementById('footer-type-tips').innerHTML = data.hitokoto
+      }
+    })
+}
+
+if (true) {
+  if (typeof Typed === 'function') {
+    subtitleType()
+  } else {
+    getScript('https://cdn.cbd.int/typed.js@2.1.0/dist/typed.umd.js').then(subtitleType)
+  }
+} else {
+  subtitleType()
+}
+</script></div></div><div class="footer-bar-right"><a class="footer-bar-link" target="_blank" rel="noopener" href="https://github.com/anzhiyu-c/hexo-theme-anzhiyu" title="主题">主题</a><a class="footer-bar-link" target="_blank" rel="noopener" href="https://picture.399699.xyz/" title="图床">图床</a><a class="footer-bar-link cc" href="/copyright" title="cc协议"><i class="anzhiyufont anzhiyu-icon-copyright-line"></i><i class="anzhiyufont anzhiyu-icon-creative-commons-by-line"></i><i class="anzhiyufont anzhiyu-icon-creative-commons-nc-line"></i><i class="anzhiyufont anzhiyu-icon-creative-commons-nd-line"></i></a></div></div></div></footer></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="sidebar-site-data site-data is-center"><a href="/archives/" title="archive"><div class="headline">文章</div><div class="length-num">76</div></a><a href="/tags/" title="tag"><div class="headline">标签</div><div class="length-num">30</div></a><a href="/categories/" title="category"><div class="headline">分类</div><div class="length-num">3</div></a></div><span class="sidebar-menu-item-title">功能</span><div class="sidebar-menu-item"><a class="darkmode_switchbutton menu-child" href="javascript:void(0);" title="显示模式"><i class="anzhiyufont anzhiyu-icon-circle-half-stroke"></i><span>显示模式</span></a></div><div class="back-menu-list-groups"><div class="back-menu-list-group"><div class="back-menu-list-title">网页</div><div class="back-menu-list"><a class="back-menu-item" target="_blank" rel="noopener" href="https://oior.net/" title="博客(Typecho系统)"><img class="back-menu-item-icon" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://oior.net/img/favicon.png" alt="博客(Typecho系统)"/><span class="back-menu-item-text">博客(Typecho系统)</span></a></div></div><div class="back-menu-list-group"><div class="back-menu-list-title">其他</div><div class="back-menu-list"><a class="back-menu-item" target="_blank" rel="noopener" href="https://disk.399699.xyz/" title="网盘"><img class="back-menu-item-icon" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACA8tmxViib-Bpt4IBsvCmPPo1MLaNLwACUxAAAiKFKFZ15JfRYFeCTDUE" alt="网盘"/><span class="back-menu-item-text">网盘</span></a><a class="back-menu-item" target="_blank" rel="noopener" href="https://picture.399699.xyz/" title="图床"><img class="back-menu-item-icon" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACAx5mskERB4Nxe-g_-ZaYaeiNe7h0oQACnA4AAiRFmFV7Q57JdizIiDUE&quot;" data-lazy-src="https://pict.399699.xyz/d/BQACAgUAAx0Ea55INgACA8xmxVi_5aq1eozG9prwluJEnpK-owACVBAAAiKFKFaqVEKUvwrD9jUE" alt="图床"/><span class="back-menu-item-text">图床</span></a></div></div></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="javascript:void(0);"><span> 文章</span></a><ul class="menus_item_child"><li><a class="site-page child faa-parent animated-hover" href="/archives/"><i class="anzhiyufont anzhiyu-icon-box-archive faa-tada" style="font-size: 0.9em;"></i><span> 隧道</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/categories/"><i class="anzhiyufont anzhiyu-icon-shapes faa-tada" style="font-size: 0.9em;"></i><span> 分类</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/tags/"><i class="anzhiyufont anzhiyu-icon-tags faa-tada" style="font-size: 0.9em;"></i><span> 标签</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><span> 友链</span></a><ul class="menus_item_child"><li><a class="site-page child faa-parent animated-hover" href="/link/"><i class="anzhiyufont anzhiyu-icon-link faa-tada" style="font-size: 0.9em;"></i><span> 友人帐</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/fcircle/"><i class="anzhiyufont anzhiyu-icon-artstation faa-tada" style="font-size: 0.9em;"></i><span> 朋友圈</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/comments/"><i class="anzhiyufont anzhiyu-icon-envelope faa-tada" style="font-size: 0.9em;"></i><span> 留言板</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><span> 我的</span></a><ul class="menus_item_child"><li><a class="site-page child faa-parent animated-hover" href="/music/"><i class="anzhiyufont anzhiyu-icon-music faa-tada" style="font-size: 0.9em;"></i><span> 音乐馆</span></a></li><li><a class="site-page child faa-parent animated-hover" href="/album/"><i class="anzhiyufont anzhiyu-icon-images faa-tada" style="font-size: 0.9em;"></i><span> 相册集</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><span> 关于</span></a><ul class="menus_item_child"><li><a class="site-page child faa-parent animated-hover" href="/about/"><i class="anzhiyufont anzhiyu-icon-paper-plane faa-tada" style="font-size: 0.9em;"></i><span> 关于本人</span></a></li><li><a class="site-page child faa-parent animated-hover" href="javascript:toRandomPost()"><i class="anzhiyufont anzhiyu-icon-shoe-prints1 faa-tada" style="font-size: 0.9em;"></i><span> 随便逛逛</span></a></li></ul></div></div><span class="sidebar-menu-item-title">标签</span><div class="card-tags"><div class="item-headline"></div><div class="card-tag-cloud"><a href="/tags/AI/" style="font-size: 0.88rem;">AI<sup>1</sup></a><a href="/tags/Aria2/" style="font-size: 0.88rem;">Aria2<sup>1</sup></a><a href="/tags/Chevereto/" style="font-size: 0.88rem;">Chevereto<sup>1</sup></a><a href="/tags/CloudFlar/" style="font-size: 0.88rem;">CloudFlar<sup>2</sup></a><a href="/tags/Cloudflare/" style="font-size: 0.88rem;">Cloudflare<sup>3</sup></a><a href="/tags/Doprax/" style="font-size: 0.88rem;">Doprax<sup>1</sup></a><a href="/tags/Heroku/" style="font-size: 0.88rem;">Heroku<sup>1</sup></a><a href="/tags/Koyeb/" style="font-size: 0.88rem;">Koyeb<sup>1</sup></a><a href="/tags/MTP/" style="font-size: 0.88rem;">MTP<sup>1</sup></a><a href="/tags/PagerMaid-Pyro/" style="font-size: 0.88rem;">PagerMaid-Pyro<sup>1</sup></a><a href="/tags/Quartus-II/" style="font-size: 0.88rem;">Quartus II<sup>1</sup></a><a href="/tags/Rclone/" style="font-size: 0.88rem;">Rclone<sup>1</sup></a><a href="/tags/Silvaco/" style="font-size: 0.88rem;">Silvaco<sup>1</sup></a><a href="/tags/Telegram/" style="font-size: 0.88rem;">Telegram<sup>1</sup></a><a href="/tags/Verilog/" style="font-size: 0.88rem;">Verilog<sup>1</sup></a><a href="/tags/Virtualizor/" style="font-size: 0.88rem;">Virtualizor<sup>1</sup></a><a href="/tags/WHMCS/" style="font-size: 0.88rem;">WHMCS<sup>1</sup></a><a href="/tags/hexo/" style="font-size: 0.88rem;">hexo<sup>1</sup></a><a href="/tags/modelsim/" style="font-size: 0.88rem;">modelsim<sup>1</sup></a><a href="/tags/modelsim-altera/" style="font-size: 0.88rem;">modelsim-altera<sup>1</sup></a><a href="/tags/%E4%BC%98%E9%80%89IP/" style="font-size: 0.88rem;">优选IP<sup>4</sup></a><a href="/tags/%E5%9B%BE%E5%BA%8A/" style="font-size: 0.88rem;">图床<sup>1</sup></a><a href="/tags/%E5%A4%87%E4%BB%BD/" style="font-size: 0.88rem;">备份<sup>1</sup></a><a href="/tags/%E6%9C%BA%E5%99%A8%E4%BA%BA/" style="font-size: 0.88rem;">机器人<sup>1</sup></a><a href="/tags/%E6%A0%A1%E5%9B%AD%E7%BD%91/" style="font-size: 0.88rem;">校园网<sup>2</sup></a><a href="/tags/%E8%84%9A%E6%9C%AC/" style="font-size: 0.88rem;">脚本<sup>1</sup></a><a href="/tags/%E8%A7%86%E9%A2%91/" style="font-size: 0.88rem;">视频<sup>1</sup></a><a href="/tags/%E8%AE%B0%E4%BA%8B%E6%9C%AC/" style="font-size: 0.88rem;">记事本<sup>1</sup></a><a href="/tags/%E8%BD%AC%E5%8F%91/" style="font-size: 0.88rem;">转发<sup>1</sup></a><a href="/tags/%E9%87%87%E8%AE%BF/" style="font-size: 0.88rem;">采访<sup>1</sup></a></div></div><hr/></div></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="anzhiyufont anzhiyu-icon-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="anzhiyufont anzhiyu-icon-circle-half-stroke"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="anzhiyufont anzhiyu-icon-arrows-left-right"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="anzhiyufont anzhiyu-icon-gear"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="anzhiyufont anzhiyu-icon-list-ul"></i></button><a id="to_comment" href="#post-comment" title="直达评论"><i class="anzhiyufont anzhiyu-icon-comments"></i></a><button id="go-up" type="button" title="回到顶部"><i class="anzhiyufont anzhiyu-icon-arrow-up"></i></button></div></div><div id="nav-music"><a id="nav-music-hoverTips" onclick="anzhiyu.musicToggle()" accesskey="m">播放音乐</a><div id="console-music-bg"></div><meting-js id="8152976493" server="netease" type="playlist" mutex="true" preload="none" theme="var(--anzhiyu-main)" data-lrctype="0" order="random" volume="0.7"></meting-js></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="anzhiyufont anzhiyu-icon-xmark"></i></button></nav><div class="is-center" id="loading-database"><i class="anzhiyufont anzhiyu-icon-spinner anzhiyu-pulse-icon"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div></div></div><div id="search-mask"></div></div><div id="rightMenu"><div class="rightMenu-group rightMenu-small"><div class="rightMenu-item" id="menu-backward"><i class="anzhiyufont anzhiyu-icon-arrow-left"></i></div><div class="rightMenu-item" id="menu-forward"><i class="anzhiyufont anzhiyu-icon-arrow-right"></i></div><div class="rightMenu-item" id="menu-refresh"><i class="anzhiyufont anzhiyu-icon-arrow-rotate-right" style="font-size: 1rem;"></i></div><div class="rightMenu-item" id="menu-top"><i class="anzhiyufont anzhiyu-icon-arrow-up"></i></div></div><div class="rightMenu-group rightMenu-line rightMenuPlugin"><div class="rightMenu-item" id="menu-copytext"><i class="anzhiyufont anzhiyu-icon-copy"></i><span>复制选中文本</span></div><div class="rightMenu-item" id="menu-pastetext"><i class="anzhiyufont anzhiyu-icon-paste"></i><span>粘贴文本</span></div><a class="rightMenu-item" id="menu-commenttext"><i class="anzhiyufont anzhiyu-icon-comment-medical"></i><span>引用到评论</span></a><div class="rightMenu-item" id="menu-newwindow"><i class="anzhiyufont anzhiyu-icon-window-restore"></i><span>新窗口打开</span></div><div class="rightMenu-item" id="menu-copylink"><i class="anzhiyufont anzhiyu-icon-link"></i><span>复制链接地址</span></div><div class="rightMenu-item" id="menu-copyimg"><i class="anzhiyufont anzhiyu-icon-images"></i><span>复制此图片</span></div><div class="rightMenu-item" id="menu-downloadimg"><i class="anzhiyufont anzhiyu-icon-download"></i><span>下载此图片</span></div><div class="rightMenu-item" id="menu-newwindowimg"><i class="anzhiyufont anzhiyu-icon-window-restore"></i><span>新窗口打开图片</span></div><div class="rightMenu-item" id="menu-search"><i class="anzhiyufont anzhiyu-icon-magnifying-glass"></i><span>站内搜索</span></div><div class="rightMenu-item" id="menu-searchBaidu"><i class="anzhiyufont anzhiyu-icon-magnifying-glass"></i><span>百度搜索</span></div><div class="rightMenu-item" id="menu-music-toggle"><i class="anzhiyufont anzhiyu-icon-play"></i><span>播放音乐</span></div><div class="rightMenu-item" id="menu-music-back"><i class="anzhiyufont anzhiyu-icon-backward"></i><span>切换到上一首</span></div><div class="rightMenu-item" id="menu-music-forward"><i class="anzhiyufont anzhiyu-icon-forward"></i><span>切换到下一首</span></div><div class="rightMenu-item" id="menu-music-playlist" onclick="window.open(&quot;https://y.qq.com/n/ryqq/playlist/8802438608&quot;, &quot;_blank&quot;);" style="display: none;"><i class="anzhiyufont anzhiyu-icon-radio"></i><span>查看所有歌曲</span></div><div class="rightMenu-item" id="menu-music-copyMusicName"><i class="anzhiyufont anzhiyu-icon-copy"></i><span>复制歌名</span></div></div><div class="rightMenu-group rightMenu-line rightMenuOther"><a class="rightMenu-item menu-link" id="menu-randomPost"><i class="anzhiyufont anzhiyu-icon-shuffle"></i><span>随便逛逛</span></a><a class="rightMenu-item menu-link" href="/categories/"><i class="anzhiyufont anzhiyu-icon-cube"></i><span>博客分类</span></a><a class="rightMenu-item menu-link" href="/tags/"><i class="anzhiyufont anzhiyu-icon-tags"></i><span>文章标签</span></a></div><div class="rightMenu-group rightMenu-line rightMenuOther"><a class="rightMenu-item" id="menu-copy" href="javascript:void(0);"><i class="anzhiyufont anzhiyu-icon-copy"></i><span>复制地址</span></a><a class="rightMenu-item" id="menu-commentBarrage" href="javascript:void(0);"><i class="anzhiyufont anzhiyu-icon-message"></i><span class="menu-commentBarrage-text">关闭热评</span></a><a class="rightMenu-item" id="menu-darkmode" href="javascript:void(0);"><i class="anzhiyufont anzhiyu-icon-circle-half-stroke"></i><span class="menu-darkmode-text">深色模式</span></a><a class="rightMenu-item" id="menu-translate" href="javascript:void(0);"><i class="anzhiyufont anzhiyu-icon-language"></i><span>轉為繁體</span></a></div></div><div id="rightmenu-mask"></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><script src="https://cdn.cbd.int/@fancyapps/ui@5.0.28/dist/fancybox/fancybox.umd.js"></script><script src="https://cdn.cbd.int/instant.page@5.2.0/instantpage.js" type="module"></script><script src="https://cdn.cbd.int/vanilla-lazyload@17.8.5/dist/lazyload.iife.min.js"></script><script src="https://cdn.cbd.int/node-snackbar@0.1.16/dist/snackbar.min.js"></script><script>// 消除控制台打印
+var HoldLog = console.log;
+console.log = function () {};
+let now1 = new Date();
+queueMicrotask(() => {
+  const Log = function () {
+    HoldLog.apply(console, arguments);
+  }; //在恢复前输出日志
+  const grt = new Date("06/08/2024 00:00:00"); //此处修改你的建站时间或者网站上线时间
+  now1.setTime(now1.getTime() + 250);
+  const days = (now1 - grt) / 1000 / 60 / 60 / 24;
+  const dnum = Math.floor(days);
+  const ascll = [
+    `欢迎使用安知鱼!`,
+    `生活明朗, 万物可爱`,
+    `
+        
+       █████╗ ███╗   ██╗███████╗██╗  ██╗██╗██╗   ██╗██╗   ██╗
+      ██╔══██╗████╗  ██║╚══███╔╝██║  ██║██║╚██╗ ██╔╝██║   ██║
+      ███████║██╔██╗ ██║  ███╔╝ ███████║██║ ╚████╔╝ ██║   ██║
+      ██╔══██║██║╚██╗██║ ███╔╝  ██╔══██║██║  ╚██╔╝  ██║   ██║
+      ██║  ██║██║ ╚████║███████╗██║  ██║██║   ██║   ╚██████╔╝
+      ╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝╚═╝   ╚═╝    ╚═════╝
+        
+        `,
+    "已上线",
+    dnum,
+    "天",
+    "©2024 By 安知鱼 V1.6.12",
+  ];
+  const ascll2 = [`NCC2-036`, `调用前置摄像头拍照成功，识别为【小笨蛋】.`, `Photo captured: `, `🤪`];
+
+  setTimeout(
+    Log.bind(
+      console,
+      `\n%c${ascll[0]} %c ${ascll[1]} %c ${ascll[2]} %c${ascll[3]}%c ${ascll[4]}%c ${ascll[5]}\n\n%c ${ascll[6]}\n`,
+      "color:#425AEF",
+      "",
+      "color:#425AEF",
+      "color:#425AEF",
+      "",
+      "color:#425AEF",
+      ""
+    )
+  );
+  setTimeout(
+    Log.bind(
+      console,
+      `%c ${ascll2[0]} %c ${ascll2[1]} %c \n${ascll2[2]} %c\n${ascll2[3]}\n`,
+      "color:white; background-color:#4fd953",
+      "",
+      "",
+      'background:url("https://npm.elemecdn.com/anzhiyu-blog@1.1.6/img/post/common/tinggge.gif") no-repeat;font-size:450%'
+    )
+  );
+
+  setTimeout(Log.bind(console, "%c WELCOME %c 你好，小笨蛋.", "color:white; background-color:#4f90d9", ""));
+
+  setTimeout(
+    console.warn.bind(
+      console,
+      "%c ⚡ Powered by 安知鱼 %c 你正在访问 First 的博客.",
+      "color:white; background-color:#f0ad4e",
+      ""
+    )
+  );
+
+  setTimeout(Log.bind(console, "%c W23-12 %c 你已打开控制台.", "color:white; background-color:#4f90d9", ""));
+
+  setTimeout(
+    console.warn.bind(console, "%c S013-782 %c 你现在正处于监控中.", "color:white; background-color:#d9534f", "")
+  );
+});</script><script async src="/anzhiyu/random.js"></script><script src="/js/search/local-search.js"></script><div class="js-pjax"><script>(() => {
+  const initWaline = () => {
+    const waline = Waline.init(Object.assign({
+      el: '#waline-wrap',
+      serverURL: 'https://waline-77ngj0sky-eryba218gmailcoms-projects.vercel.app',
+      pageview: true,
+      dark: 'html[data-theme="dark"]',
+      path: window.location.pathname,
+      comment: false,
+    }, null))
+  }
+
+  const loadWaline = async () => {
+    if (typeof Waline === 'object') initWaline()
+    else {
+      await getCSS('https://cdn.cbd.int/@waline/client@2.15.5/dist/waline.css')
+      await getScript('https://cdn.cbd.int/@waline/client@2.15.5/dist/waline.js')
+      initWaline()
+    }
+  }
+
+  if ('Waline' === 'Waline' || !false) {
+    if (false) anzhiyu.loadComment(document.getElementById('waline-wrap'),loadWaline)
+    else setTimeout(loadWaline, 0)
+  } else {
+    window.loadOtherComment = loadWaline
+  }
+})()</script><input type="hidden" name="page-type" id="page-type" value="post"></div><script>window.addEventListener('load', () => {
+  const changeContent = content => {
+    if (content === '') return content
+
+    content = content.replace(/<img.*?src="(.*?)"?[^\>]+>/ig, '[图片]') // replace image link
+    content = content.replace(/<a[^>]+?href=["']?([^"']+)["']?[^>]*>([^<]+)<\/a>/gi, '[链接]') // replace url
+    content = content.replace(/<pre><code>.*?<\/pre>/gi, '[代码]') // replace code
+    content = content.replace(/<[^>]+>/g,"") // remove html tag
+
+    if (content.length > 150) {
+      content = content.substring(0,150) + '...'
+    }
+    return content
+  }
+
+  const generateHtml = array => {
+    let result = ''
+
+    if (array.length) {
+      for (let i = 0; i < array.length; i++) {
+        result += '<div class=\'aside-list-item\'>'
+
+        if (true) {
+          const name = 'data-lazy-src'
+          result += `<a href='${array[i].url}' class='thumbnail'><img ${name}='${array[i].avatar}' alt='${array[i].nick}'></a>`
+        }
+
+        result += `<div class='content'>
+        <a class='comment' href='${array[i].url}' title='${array[i].content}'>${array[i].content}</a>
+        <div class='name'><span>${array[i].nick} / </span><time datetime="${array[i].date}">${anzhiyu.diffDate(array[i].date, true)}</time></div>
+        </div></div>`
+      }
+    } else {
+      result += '没有评论'
+    }
+
+    let $dom = document.querySelector('#card-newest-comments .aside-list')
+    $dom && ($dom.innerHTML= result)
+    window.lazyLoadInstance && window.lazyLoadInstance.update()
+    window.pjax && window.pjax.refresh($dom)
+  }
+
+  const getComment = async () => {
+    try {
+      const res = await fetch('https://waline-77ngj0sky-eryba218gmailcoms-projects.vercel.app/api/comment?type=recent&count=6', { method: 'GET' })
+      const result = await res.json()
+      const walineArray = result.data.map(e => {
+        return {
+          'content': changeContent(e.comment),
+          'avatar': e.avatar,
+          'nick': e.nick,
+          'url': e.url + '#' + e.objectId,
+          'date': e.time || e.insertedAt
+        }
+      })
+      saveToLocal.set('waline-newest-comments', JSON.stringify(walineArray), 10/(60*24))
+      generateHtml(walineArray)
+    } catch (err) {
+      console.error(err)
+      const $dom = document.querySelector('#card-newest-comments .aside-list')
+      $dom.textContent= "无法获取评论，请确认相关配置是否正确"
+    }
+  }
+
+  const newestCommentInit = () => {
+    if (document.querySelector('#card-newest-comments .aside-list')) {
+      const data = saveToLocal.get('waline-newest-comments')
+      if (data) {
+        generateHtml(JSON.parse(data))
+      } else {
+        getComment()
+      }
+    }
+  }
+
+  newestCommentInit()
+  document.addEventListener('pjax:complete', newestCommentInit)
+})</script><script async data-pjax src="https://cdn.cbd.int/anzhiyu-theme-static@1.0.0/waterfall/waterfall.js"></script><script src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/qrcodejs/1.0.0/qrcode.min.js"></script><link rel="stylesheet" href="https://cdn.cbd.int/anzhiyu-theme-static@1.1.9/icon/ali_iconfont_css.css"><canvas class="fireworks" mobile="false"></canvas><script src="https://cdn.cbd.int/butterfly-extsrc@1.1.3/dist/fireworks.min.js"></script><link rel="stylesheet" href="https://cdn.cbd.int/anzhiyu-theme-static@1.0.0/aplayer/APlayer.min.css" media="print" onload="this.media='all'"><script src="https://cdn.cbd.int/anzhiyu-blog-static@1.0.1/js/APlayer.min.js"></script><script src="https://cdn.cbd.int/hexo-anzhiyu-music@1.0.1/assets/js/Meting2.min.js"></script><script src="https://cdn.cbd.int/pjax@0.2.8/pjax.min.js"></script><script>let pjaxSelectors = ["head > title","#config-diff","#body-wrap","#rightside-config-hide","#rightside-config-show",".js-pjax"]
+var pjax = new Pjax({
+  elements: 'a:not([target="_blank"]):not([href="/music/"]):not([href="/no-pjax/"])',
+  selectors: pjaxSelectors,
+  cacheBust: false,
+  analytics: true,
+  scrollRestoration: false
+})
+
+document.addEventListener('pjax:send', function () {
+  // removeEventListener scroll 
+  anzhiyu.removeGlobalFnEvent('pjax')
+  anzhiyu.removeGlobalFnEvent('themeChange')
+
+  document.getElementById('rightside').classList.remove('rightside-show')
+  
+  if (window.aplayers) {
+    for (let i = 0; i < window.aplayers.length; i++) {
+      if (!window.aplayers[i].options.fixed) {
+        window.aplayers[i].destroy()
+      }
+    }
+  }
+
+  typeof typed === 'object' && typed.destroy()
+
+  //reset readmode
+  const $bodyClassList = document.body.classList
+  $bodyClassList.contains('read-mode') && $bodyClassList.remove('read-mode')
+})
+
+document.addEventListener('pjax:complete', function () {
+  window.refreshFn()
+
+  document.querySelectorAll('script[data-pjax]').forEach(item => {
+    const newScript = document.createElement('script')
+    const content = item.text || item.textContent || item.innerHTML || ""
+    Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+    newScript.appendChild(document.createTextNode(content))
+    item.parentNode.replaceChild(newScript, item)
+  })
+
+  GLOBAL_CONFIG.islazyload && window.lazyLoadInstance.update()
+
+  typeof panguInit === 'function' && panguInit()
+
+  // google analytics
+  typeof gtag === 'function' && gtag('config', 'G-1N45T8T0T3', {'page_path': window.location.pathname});
+
+  // baidu analytics
+  typeof _hmt === 'object' && _hmt.push(['_trackPageview',window.location.pathname]);
+
+  typeof loadMeting === 'function' && document.getElementsByClassName('aplayer').length && loadMeting()
+
+  // prismjs
+  typeof Prism === 'object' && Prism.highlightAll()
+})
+
+document.addEventListener('pjax:error', e => {
+  if (e.request.status === 404) {
+    pjax.loadUrl('/404.html')
+  }
+})</script><script charset="UTF-8" src="https://cdn.cbd.int/anzhiyu-theme-static@1.1.5/accesskey/accesskey.js"></script></div><div id="popup-window"><div class="popup-window-title">通知</div><div class="popup-window-divider"></div><div class="popup-window-content"><div class="popup-tip">你好呀</div><div class="popup-link"><i class="anzhiyufont anzhiyu-icon-arrow-circle-right"></i></div></div></div></body></html>
